@@ -1,0 +1,12 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+FROM jupyterhub/jupyterhub
+
+# Install dockerspawner, nativeauthenticator
+RUN python3 -m pip install --no-cache-dir \
+        dockerspawner \
+        jupyterhub-nativeauthenticator \
+        jupyterlab \
+        matplotlib
+
+CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]

@@ -1,0 +1,20 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+FROM jupyterhub/jupyterhub
+
+# Will copy from existing Docker image
+COPY --from=continuumio/anaconda3 /opt/conda /opt/conda
+
+ENV PATH=/opt/conda/bin:$PATH
+
+# Install dockerspawner, nativeauthenticator
+RUN python3 -m pip install --no-cache-dir \
+        jupyterhub-nativeauthenticator \
+        jupyterlite-core \
+        jupyterlite-p5-kernel \
+        jupyterlite-pyodide-kernel \
+        jupyterlite-xeus-python
+
+RUN jupyter lite build
+
+CMD jupyter lite serve --port=8090

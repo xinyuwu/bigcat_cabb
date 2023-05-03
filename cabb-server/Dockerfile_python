@@ -1,0 +1,16 @@
+FROM python:3.7-buster
+
+RUN apt-get update && apt-get install -y \
+  vim \
+  git \
+  python3 \
+  libxml2-dev libxmlsec1-dev libxmlsec1-openssl \
+  python3-pip
+
+COPY cabb-server/requirements.txt /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
+
+WORKDIR /opt/src
+CMD export PYTHONPATH=cabb && uwsgi --http 0.0.0.0:5000 --master --wsgi-file cabb/wsgi.py
+# CMD export PYTHONPATH=src && python3 src/cabb/app.py
+# CMD sleep 6000

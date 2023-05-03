@@ -1,0 +1,74 @@
+.target_line {
+  fill: none;
+}
+
+.grid line {
+  stroke: lightgrey;
+  stroke-opacity: 0.7;
+  shape-rendering: crispEdges;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+
+.limit_line {
+  stroke-dasharray: 5,5;
+  stroke-width: 2px;
+}
+
+.overlay {
+  fill: black;
+  opacity: 0;
+}
+
+.mouse-pos-text-rect{
+  fill: white;
+  opacity: 0.5;
+}
+
+.mouse-pos-line-text {
+  font-size: 11px;
+}
+
+.mouse-pos-line {
+  stroke: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  stroke-dasharray: 10, 5;
+}
+
+.sun_pos {
+  cursor: pointer;
+}
+
+div.sun_pos_tooltip {
+    position: absolute;
+    text-align: center;
+    width: 100px;
+    height: 60px;
+    padding: 2px;
+    background: #FFFDE7;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 99;
+}
+
+div.sun_pos_tooltip h4 {
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.duration-brush .selection {
+  stroke: none;
+  fill: #AED581;
+}
+
+.eye-icon {
+  scale: 0.07;
+  color: #1976d2;
+}
+
+.eye-icon:hover {
+  cursor: pointer;
+}

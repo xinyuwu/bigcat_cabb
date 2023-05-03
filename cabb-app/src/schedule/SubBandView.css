@@ -1,0 +1,7 @@
+rect.selected {
+  fill: #f44336;
+}
+
+rect.hover {
+  opacity: 0.5;
+}

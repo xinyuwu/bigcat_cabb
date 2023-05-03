@@ -1,0 +1,57 @@
+version: "3.3"
+   
+services:
+  jupyter-hub:
+    build:
+      context: .
+      dockerfile: jupyter-hub/Dockerfile_jupyter-hub
+    container_name: jupyterhub
+    image: jupyterhub
+    networks: 
+      - jupyterhub-network
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./jupyter-hub:/srv/jupyterhub"
+      - "./jupyter-data:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      - "./notebooks:/notebooks"
+    environment:
+      # This username will be a JupyterHub admin
+      JUPYTERHUB_ADMIN: admin
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub-network
+      # JupyterHub will spawn this Notebook image for users
+      # TODO: make sure to build the custom image in jupyter-hub/
+      # docker build -t minimal-notebook-xinyu .
+      DOCKER_NOTEBOOK_IMAGE: minimal-notebook-xinyu
+      # DOCKER_NOTEBOOK_IMAGE: jupyter/minimal-notebook:latest
+      # Notebook directory inside user image
+      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
+      # Using this run command
+      DOCKER_SPAWN_CMD: start-singleuser.sh
+    command: >
+      jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
+
+  cabb-app:
+    build:
+      context: .
+      dockerfile: cabb-app/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./cabb-app:/cabb-app
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./cabb-app/nginx-dev.conf:/etc/nginx/nginx.conf
+      - ./cabb-app/log:/var/log/nginx
+    ports:
+      - "80:80"
+    depends_on:
+        - cabb-app
+
+networks:
+  jupyterhub-network:
+    name: jupyterhub-network

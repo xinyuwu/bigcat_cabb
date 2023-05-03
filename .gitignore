@@ -1,0 +1,10 @@
+*.pdf
+*.pyc
+saved/
+secrets.tmp
+venv/
+.idea/
+.vscode/
+
+log
+data/*
