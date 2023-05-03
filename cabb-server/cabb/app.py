@@ -4,7 +4,7 @@ import os
 import copy
 import pathlib
 
-BASE_DIRECTORY = '/Users/wu049/bigcat/notebooks/jupyterhub-user-{user}'
+BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
 # BASE_DIRECTORY = '/notebooks/jupyterhub-user-{user}'
 USER_ID = 'wu049'
 
@@ -320,7 +320,11 @@ def save_file():
         return flask.jsonify(result)
 
       with open(full_filename, 'w') as f:
-        f.write(json.dumps(filecontent, indent=4))
+        if isinstance(filecontent, str):
+          f.write(filecontent)
+        else:
+          f.write(json.dumps(filecontent, indent=4))
+
         f.close()
 
       result = {
