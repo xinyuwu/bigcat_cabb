@@ -77,6 +77,10 @@ export default function CorrelatorConfigurationView() {
     return () => clearInterval(interval);
   }, [projectContext, isDirty]);
 
+  const saveCorrelatorSetting = () => {
+    setIsDirty(false);
+    projectContext.saveCorrelatorSetting();
+  }
 
   const setCorrelatorSetting = (config: any[]) => {
     setIsDirty(true);
@@ -310,7 +314,8 @@ export default function CorrelatorConfigurationView() {
             <InputIcon />
           </IconButton>
 
-          <IconButton aria-label="delete" color='primary'>
+          <IconButton aria-label="delete" color='primary' 
+            onClick={saveCorrelatorSetting}>
             <SaveIcon />
           </IconButton>
         </Stack>

@@ -1,6 +1,6 @@
 import React from "react";
 import * as d3 from "d3";
-import * as Utils from '../Utils';
+import * as Utils from '../util/Utils';
 import * as AstroUtil from '../astro/AstroUtil';
 import * as AstroSource from '../astro/AstroSource';
 import * as DatetimeUtil from '../astro/DatetimeUtil';

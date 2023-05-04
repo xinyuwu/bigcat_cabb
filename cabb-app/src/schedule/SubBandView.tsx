@@ -1,8 +1,8 @@
 import React from "react";
 import * as d3 from "d3";
-import * as ATCAConstants from '../util/ATCAConstants'
+import * as ATCAConstants from '../util/ATCAConstants';
 
-import './SubBandView.css'
+import './SubBandView.css';
 import Snackbar from "@mui/material/Snackbar";
 
 
@@ -284,10 +284,10 @@ export default function SubBandView(
         open={openSnack}
         autoHideDuration={5000}
         onClose={e => { setOpenSnack(false) }}
-        message="Can't ahve more than 4 configurations per sub band!"
+        message="Can't have more than 4 configurations per sub band!"
       />
       
-      <svg width='100%' height='130px' ref={svgRef}>
+      <svg className='subbandview' width='100%' height='130px' ref={svgRef}>
       </svg>
     </React.Fragment>
   );
