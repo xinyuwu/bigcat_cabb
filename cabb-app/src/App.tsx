@@ -11,6 +11,7 @@ import ProjectContextProvider from './schedule/ProjectContext';
 import { useLocation } from 'react-router-dom';
 import TargetCatalogueView from './schedule/TargetCatalogueView';
 import ScheduleContextProvider from './schedule/ScheduleContext';
+import './App.css';
 
 function App() {
   const location = useLocation();

@@ -1,7 +1,7 @@
-rect.selected {
+.subbandview rect.selected {
   fill: #f44336;
 }
 
-rect.hover {
+.subbandview rect.hover {
   opacity: 0.5;
 }

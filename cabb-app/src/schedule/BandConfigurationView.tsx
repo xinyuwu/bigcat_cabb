@@ -54,6 +54,11 @@ export default function BanConfigurationView() {
     return () => clearInterval(interval);
   }, [projectContext, isDirty]);
 
+  const saveBandConfiguration = () => {
+    setIsDirty(false);
+    projectContext.saveBandConfiguration();
+  }
+
   const calculateIsAllValid = () => {
     const modes = projectContext.bandConfiguration;
     for (let i=0; i<modes.length; i++ ) {
@@ -335,7 +340,8 @@ export default function BanConfigurationView() {
             <InputIcon />
           </IconButton>
 
-          <IconButton aria-label="delete" color='primary'>
+          <IconButton aria-label="delete" color='primary' 
+            onClick={saveBandConfiguration}>
             <SaveIcon />
           </IconButton>
         </Stack>
