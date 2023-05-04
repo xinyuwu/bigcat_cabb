@@ -1,6 +1,6 @@
 import React from "react";
 import * as d3 from "d3";
-import * as Utils from '../util/Utils';
+import * as ATCAConstants from '../util/ATCAConstants';
 import * as AstroUtil from '../astro/AstroUtil';
 import * as AstroSource from '../astro/AstroSource';
 import * as DatetimeUtil from '../astro/DatetimeUtil';
@@ -248,7 +248,7 @@ export default function SourceGraph(
     }
 
     const value = props.source;
-    let color = Utils.COLOR_LIST[0];
+    let color = ATCAConstants.COLOR_LIST[0];
 
     let elevations: any = AstroSource.calculateElevation(
                           { ra: value.ra, dec: value.dec }, planDate);

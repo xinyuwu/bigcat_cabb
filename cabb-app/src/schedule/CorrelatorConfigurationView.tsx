@@ -337,7 +337,7 @@ export default function CorrelatorConfigurationView() {
                 key={'corr-setting-' + index}
                 onClick={e => handleSelectSetting(index)}
                 sx={{ 
-                  backgroundColor: index === selectedCorrSetting ? '#eeeeee' : 0 
+                  backgroundColor: index === selectedCorrSetting ? '#eeeeee' : 'inherit' 
                 }}
                 secondaryAction={
                   (index === selectedCorrSetting) &&
