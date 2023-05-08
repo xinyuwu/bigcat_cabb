@@ -3,6 +3,8 @@ import Snackbar from '@mui/material/Snackbar';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
+const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+
 export const INIT_SCHEDULE_FILE = {
   document: 'ATCA BIGCAT scheduler file',
   version: '1.0',
@@ -69,7 +71,7 @@ export default function ScheduleContextProvider(props: any) {
     }
 
     const fullfilename = projectName + '/' + fname;
-    fetch(`/api/get_file_content?filename=${encodeURIComponent(fullfilename)}`)
+    fetch(`${SERVER_ROOT_URL }/get_file_content?filename=${encodeURIComponent(fullfilename)}`)
       .then(
         response => response.json()
       )
@@ -131,7 +133,7 @@ export default function ScheduleContextProvider(props: any) {
         filename: fullfilename,
         content: schedule
       };
-      fetch('/api/save_file', {
+      fetch(`${SERVER_ROOT_URL}/save_file`, {
         method: 'POST', body: JSON.stringify(data)
       })
       .then(

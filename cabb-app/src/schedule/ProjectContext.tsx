@@ -3,6 +3,8 @@ import Snackbar from '@mui/material/Snackbar';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
+const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+
 export const ProjectContext = React.createContext({
   project: {},
   bandConfiguration: [] as any[],
@@ -47,7 +49,7 @@ export default function ProjectContextProvider(props: any) {
       return;
     }
     
-    fetch(`/api/retrieve_project?project=${encodeURIComponent(projectName)}`)
+    fetch(`${SERVER_ROOT_URL}/retrieve_project?project=${encodeURIComponent(projectName)}`)
       .then(
         response => response.json()
       )
@@ -106,7 +108,7 @@ export default function ProjectContextProvider(props: any) {
       filename: filename,
       content: content
     };
-    fetch('/api/save_file', {
+    fetch(`${SERVER_ROOT_URL}/save_file`, {
       method: 'POST', body: JSON.stringify(data)
     })
     .then(

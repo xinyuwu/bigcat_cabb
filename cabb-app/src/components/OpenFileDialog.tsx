@@ -3,6 +3,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions,
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
 
+const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+
 export default function OpenFileDialog(
   props: {
     open: boolean,
@@ -19,7 +21,7 @@ export default function OpenFileDialog(
   React.useEffect(() => {
     if (props.open) {
       // get directories from the backend
-      fetch('/api/list')
+      fetch(`${SERVER_ROOT_URL}/list`)
         .then(
           response => response.json()
         )

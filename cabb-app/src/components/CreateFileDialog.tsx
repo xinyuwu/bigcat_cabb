@@ -3,6 +3,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions,
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
 
+const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+
 export default function CreateFileDialog(
   props: {
     open: boolean,
@@ -22,7 +24,7 @@ export default function CreateFileDialog(
     setSelectedItem(null);
     if (props.open) {
       // get directories from the backend
-      fetch('/api/list')
+      fetch(`${SERVER_ROOT_URL}/list`)
         .then(
           response => response.json()
         )
@@ -51,7 +53,7 @@ export default function CreateFileDialog(
     if (filename) {
       const encodedValue = encodeURIComponent(filename);
       // get directories from the backend
-      fetch(`/api/create_project?project=${encodedValue}`)
+      fetch(`${SERVER_ROOT_URL}/create_project?project=${encodedValue}`)
         .then(
           response => response.json()
         )

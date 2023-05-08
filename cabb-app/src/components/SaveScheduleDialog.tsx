@@ -4,6 +4,8 @@ import { Stack } from "@mui/system";
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
 
+const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+
 export default function SaveScheduleDialog(
   props: {
     open: boolean,
@@ -22,7 +24,7 @@ export default function SaveScheduleDialog(
       setReplace(false);
 
       // get files from the backend
-      fetch(`/api/list_files?project=${encodeURIComponent(props.rootPath)}`)
+      fetch(`${SERVER_ROOT_URL}/list_files?project=${encodeURIComponent(props.rootPath)}`)
         .then(
           response => response.json()
         )
