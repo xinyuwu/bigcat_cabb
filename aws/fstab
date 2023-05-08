@@ -1,0 +1,5 @@
+#
+UUID=974bfdce-a279-4e16-b3a4-114c0f95708b     /           xfs    defaults,noatime  1   1
+UUID=CE90-017B        /boot/efi       vfat    defaults,noatime,uid=0,gid=0,umask=0077,shortname=winnt,x-systemd.automount 0 2
+fs-011723fde815820a7:/ /efs efs _netdev,noresvport,tls,iam,accesspoint=fsap-001e6706ea0da0ba9 0 0
+UUID=4b3fde04-6d52-4883-ad39-5ae8d949b2bf /data  xfs  defaults,nofail  0  2
