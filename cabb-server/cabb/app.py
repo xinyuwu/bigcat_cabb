@@ -4,7 +4,6 @@ import os
 import copy
 import pathlib
 
-# BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
 BASE_DIRECTORY = '/notebooks/jupyterhub-user-{user}'
 USER_ID = 'wu049'
 
