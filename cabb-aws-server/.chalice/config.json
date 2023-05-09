@@ -3,7 +3,19 @@
   "app_name": "cabb-aws-server",
   "stages": {
     "dev": {
-      "api_gateway_stage": "api"
+      "api_gateway_stage": "api",
+      "api_gateway_endpoint_vpc": [
+        "vpc-02e7d36f4a2bc2a5d"
+      ],
+      "subnet_ids": [
+        "subnet-01567bd832f484ad9"
+      ],
+      "security_group_ids": [
+        "sg-06551477a4fbf0829",
+        "sg-0aa02da68926abcff"
+      ],
+      "manage_iam_role": false,
+      "iam_role_arn": "arn:aws:iam::647731306132:role/service-role/LambdaRole"
     }
   }
 }
