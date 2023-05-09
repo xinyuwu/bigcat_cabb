@@ -52,7 +52,7 @@ services:
       - "5000:5000"
     volumes:
       - ./cabb-server:/opt/src
-      - "./notebooks:/notebooks"
+      - "/efs/workarea:/notebooks"
 
 networks:
   jupyterhub-network:
