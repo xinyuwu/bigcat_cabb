@@ -1,10 +1,9 @@
-from chalice import Chalice
+from chalice import Chalice, CORSConfig, Response
 import json
 import os
 import copy
 import pathlib
-from chalice import CORSConfig
- 
+
 cors_config = CORSConfig(
     allow_origin='http://bigcatcabb.s3-website-us-east-1.amazonaws.com',
     allow_headers=['X-Special-Header'],
@@ -306,11 +305,10 @@ def get_file_content(filename, userid):
 @app.route('/save_file', methods=['POST'], cors=cors_config)
 def save_file():
   request = app.current_request
-  post_data = request.get_data()
+  data = request.json_body
 
-  if post_data:
+  if data:
     try:
-      data = json.loads(post_data)
       filename = data.get('filename', '')
       filecontent = data.get('content', '')
       full_filename = get_file_content(filename, 'wu049')
@@ -335,9 +333,23 @@ def save_file():
           'message': 'Saved'
       }
       return json.dumps(result)
+      # return Response(body=json.dumps(result),
+      #           status_code=200,
+      #           headers=
+      #           {'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      #             'access-control-allow-origin': 
+      #               'http://bigcatcabb.s3-website-us-east-1.amazonaws.com'
+      #           })
     except Exception as e:
       result = {
           'status': 'fail',
           'message': 'Could not save changes'
       }
       return json.dumps(result)
+      # return Response(body=json.dumps(result),
+      #           status_code=200,
+      #           headers=
+      #           {'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      #             'access-control-allow-origin': 
+      #               'http://bigcatcabb.s3-website-us-east-1.amazonaws.com'
+      #           })
