@@ -3,7 +3,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions,
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
 
-const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
 export default function CreateFileDialog(
   props: {

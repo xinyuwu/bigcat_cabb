@@ -4,7 +4,7 @@ import { Stack } from "@mui/system";
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
 
-const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
 export default function SaveScheduleDialog(
   props: {

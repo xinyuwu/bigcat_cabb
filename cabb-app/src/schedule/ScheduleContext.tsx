@@ -3,7 +3,7 @@ import Snackbar from '@mui/material/Snackbar';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-const SERVER_ROOT_URL = process.env.SERVER_ROOT_URL;
+const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
 export const INIT_SCHEDULE_FILE = {
   document: 'ATCA BIGCAT scheduler file',
