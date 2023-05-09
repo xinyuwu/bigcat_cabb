@@ -3,10 +3,18 @@ import json
 import os
 import copy
 import pathlib
-
+from chalice import CORSConfig
+ 
+cors_config = CORSConfig(
+    allow_origin='http://bigcatcabb.s3-website-us-east-1.amazonaws.com',
+    allow_headers=['X-Special-Header'],
+    max_age=600,
+    expose_headers=['X-Special-Header'],
+    allow_credentials=True
+)
 
 # BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
-BASE_DIRECTORY = '/mnt/workarea/workarea/jupyterhub-user-{user}'
+BASE_DIRECTORY = '/mnt/efs/workarea/jupyterhub-user-{user}'
 USER_ID = 'wu049'
 
 PROJECT_FILE = 'project.json'
@@ -85,10 +93,10 @@ def get_dir_content(dir_name):
   return obj
 
 
-@app.route('/list_files')
+@app.route('/list_files', cors=cors_config)
 def list_files():
   request = app.current_request
-  project = request.args.get('project', '')
+  project = request.query_params.get('project', '')
   files = []
   if not project:
     return json.dumps(files, indent=4)
@@ -111,7 +119,7 @@ def list_files():
 
   return json.dumps(files, indent=4)
 
-@app.route('/list')
+@app.route('/list', cors=cors_config)
 def list_directory():
   root = BASE_DIRECTORY
   obj = get_dir_content(root.format(user='wu049'))
@@ -128,10 +136,10 @@ def retrieve_file(fullname):
 
   return text
 
-@app.route('/create_project')
+@app.route('/create_project', cors=cors_config)
 def create_project():
   request = app.current_request
-  project_name = request.args.get('project', '')
+  project_name = request.query_params.get('project', '')
   full_filename = get_file_content(project_name, 'wu049')
 
   if not full_filename:
@@ -139,7 +147,7 @@ def create_project():
         'status': 'fail',
         'message': 'Could not create project'
     }
-    return json.dump(result)
+    return json.dumps(result)
 
   if not os.path.exists(full_filename):
     os.makedirs(full_filename)
@@ -174,13 +182,13 @@ def create_project():
       'message': 'Project {project_name} created'.format(
                   project_name=project_json['name'])
   }
-  return json.dump(result)
+  return json.dumps(result)
 
 
-@app.route('/retrieve_project')
+@app.route('/retrieve_project', cors=cors_config)
 def retrieve_project():
   request = app.current_request
-  project_name = request.args.get('project', '')
+  project_name = request.query_params.get('project', '')
   full_filename = get_file_content(project_name, 'wu049')
 
   if not full_filename:
@@ -188,14 +196,14 @@ def retrieve_project():
         'status': 'fail',
         'message': 'Project does not exist'
     }
-    return json.dump(result)
+    return json.dumps(result)
 
   if not os.path.exists(full_filename):
     result = {
         'status': 'fail',
         'message': 'Project does not exist!'
     }
-    return json.dump(result)
+    return json.dumps(result)
   
   # retrieve from directory
   # - project.json
@@ -242,13 +250,13 @@ def retrieve_project():
       'schedule_files': results,
       'target_file': target
   }
-  return json.dump(result)
+  return json.dumps(result)
 
 
-@app.route('/get_file')
+@app.route('/get_file', cors=cors_config)
 def get_file():
   request = app.current_request
-  filename = request.args.get('filename', '')
+  filename = request.query_params.get('filename', '')
 
   full_filename = get_file_content(filename, 'wu049')
 
@@ -257,7 +265,7 @@ def get_file():
         'status': 'fail',
         'message': 'Could not retrieve file'
     }
-    return json.dump(result)
+    return json.dumps(result)
 
   file_content = ''
   if os.path.isfile(full_filename):
@@ -272,7 +280,7 @@ def get_file():
         'status': 'fail',
         'message': 'Could not retrieve file'
     }
-    return json.dump(result)
+    return json.dumps(result)
 
   result = {
       'status': 'success',
@@ -295,7 +303,7 @@ def get_file_content(filename, userid):
   
   return ''
 
-@app.route('/save_file', methods=['POST'])
+@app.route('/save_file', methods=['POST'], cors=cors_config)
 def save_file():
   request = app.current_request
   post_data = request.get_data()
@@ -312,7 +320,7 @@ def save_file():
             'status': 'fail',
             'message': 'Could not save changes'
         }
-        return json.dump(result)
+        return json.dumps(result)
 
       with open(full_filename, 'w') as f:
         if isinstance(filecontent, str):
@@ -326,10 +334,10 @@ def save_file():
           'status': 'success',
           'message': 'Saved'
       }
-      return json.dump(result)
+      return json.dumps(result)
     except Exception as e:
       result = {
           'status': 'fail',
           'message': 'Could not save changes'
       }
-      return json.dump(result)
+      return json.dumps(result)
