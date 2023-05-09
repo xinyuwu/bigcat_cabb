@@ -109,7 +109,8 @@ export default function ProjectContextProvider(props: any) {
       content: content
     };
     fetch(`${SERVER_ROOT_URL}/save_file`, {
-      method: 'POST', body: JSON.stringify(data)
+      method: 'POST', body: JSON.stringify(data),
+      headers: new Headers({ 'content-type': 'application/json' })
     })
     .then(
       response => response.json()
