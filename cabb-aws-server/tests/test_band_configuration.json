@@ -1,0 +1,14 @@
+[
+    {
+        "centreFreq1": "33",
+        "centreFreq2": "35",
+        "name": "Special mode",
+        "receiver": "7mm"
+    },
+    {
+        "centreFreq1": "20",
+        "centreFreq2": "22",
+        "name": "Custom Mode",
+        "receiver": "15mm"
+    }
+]

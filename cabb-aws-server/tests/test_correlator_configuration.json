@@ -1,0 +1,77 @@
+[
+    {
+        "band_configuration": "Special mode",
+        "correlator_configuration": "High Resolution Spectral",
+        "name": "hello world",
+        "sub_band_configuration": [
+            {
+                "band": 1,
+                "center_freq": "32.3",
+                "data_rate": 0,
+                "subband": 3,
+                "zoom": "zoom1"
+            },
+            {
+                "band": 1,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 4,
+                "zoom": "zoom2"
+            },
+            {
+                "band": 1,
+                "subband": 11,
+                "data_rate": 0,
+                "center_freq": 0,
+                "zoom": "zoom1"
+            },
+            {
+                "band": 2,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 2,
+                "zoom": ""
+            },
+            {
+                "band": 2,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 2,
+                "zoom": ""
+            },
+            {
+                "band": 2,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 3,
+                "zoom": ""
+            },
+            {
+                "band": 2,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 4,
+                "zoom": ""
+            },
+            {
+                "band": 2,
+                "center_freq": 0,
+                "data_rate": 0,
+                "subband": 5,
+                "zoom": ""
+            }
+        ]
+    },
+    {
+        "band_configuration": "Custom Mode",
+        "correlator_configuration": "Continuum",
+        "name": "New Setting",
+        "sub_band_configuration": []
+    },
+    {
+        "band_configuration": "Special mode",
+        "correlator_configuration": "Continuum",
+        "name": "Cool setting",
+        "sub_band_configuration": []
+    }
+]

@@ -12,8 +12,11 @@ cors_config = CORSConfig(
     allow_credentials=True
 )
 
+# TODO: should set value in env
 # BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
 BASE_DIRECTORY = '/mnt/efs/workarea/jupyterhub-user-{user}'
+
+# TODO: integrate with single sign on, user_id should come in
 USER_ID = 'wu049'
 
 PROJECT_FILE = 'project.json'
@@ -100,7 +103,7 @@ def list_files():
   if not project:
     return json.dumps(files, indent=4)
 
-  full_project_name = get_file_content(project, 'wu049')
+  full_project_name = get_filename(project, 'wu049')
   if not full_project_name:
     return json.dumps(files, indent=4)
 
@@ -120,8 +123,7 @@ def list_files():
 
 @app.route('/list', cors=cors_config)
 def list_directory():
-  root = BASE_DIRECTORY
-  obj = get_dir_content(root.format(user='wu049'))
+  obj = get_dir_content(BASE_DIRECTORY.format(user='wu049'))
   return json.dumps(obj, indent=4)
 
 def retrieve_file(fullname):
@@ -139,7 +141,7 @@ def retrieve_file(fullname):
 def create_project():
   request = app.current_request
   project_name = request.query_params.get('project', '')
-  full_filename = get_file_content(project_name, 'wu049')
+  full_filename = get_filename(project_name, 'wu049')
 
   if not full_filename:
     result = {
@@ -188,7 +190,7 @@ def create_project():
 def retrieve_project():
   request = app.current_request
   project_name = request.query_params.get('project', '')
-  full_filename = get_file_content(project_name, 'wu049')
+  full_filename = get_filename(project_name, 'wu049')
 
   if not full_filename:
     result = {
@@ -252,12 +254,12 @@ def retrieve_project():
   return json.dumps(result)
 
 
-@app.route('/get_file', cors=cors_config)
+@app.route('/get_file_content', cors=cors_config)
 def get_file():
   request = app.current_request
   filename = request.query_params.get('filename', '')
 
-  full_filename = get_file_content(filename, 'wu049')
+  full_filename = get_filename(filename, 'wu049')
 
   if not full_filename:
     result = {
@@ -288,7 +290,7 @@ def get_file():
   return result
 
 
-def get_file_content(filename, userid):
+def get_filename(filename, userid):
   if not filename:
     return ''
   
@@ -311,7 +313,7 @@ def save_file():
     try:
       filename = data.get('filename', '')
       filecontent = data.get('content', '')
-      full_filename = get_file_content(filename, 'wu049')
+      full_filename = get_filename(filename, 'wu049')
 
       if not full_filename or not filecontent:
         result = {
