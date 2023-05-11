@@ -35,10 +35,11 @@ c.DockerSpawner.network_name = network_name
 # We follow the same convention.
 notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/home/jovyan/work"
 c.DockerSpawner.notebook_dir = notebook_dir
+workarea_dir = os.environ.get("NOTEBOOK_WORKAREA_DIR") or "/efs/workarea"
 
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
-c.DockerSpawner.volumes = {"/efs/workarea/jupyterhub-user-{username}": notebook_dir}
+c.DockerSpawner.volumes = {workarea_dir + "/jupyterhub-user-{username}": notebook_dir}
 
 # Remove containers once they are stopped
 c.DockerSpawner.remove = True
