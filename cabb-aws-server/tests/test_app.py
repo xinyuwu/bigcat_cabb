@@ -4,6 +4,8 @@ import os
 import shutil
 import json
 from pytest import fixture
+import boto3
+
 
 PROJECT_NAME = 'projects/test_project'
 BASE_DIRECTORY = os.getcwd() + "/cabb-aws-server/tests/test_workarea/jupyterhub-user-wu049"
@@ -39,6 +41,24 @@ class TestClass:
     ]
 
     assert response.json_body == result
+
+  def deploy_schedule(self, test_client):
+    response = test_client.http.get(
+      '/deploy_schedule?project=' + PROJECT_NAME + '&schedule=schedule.sch')
+
+    assert response.json_body == {"status": "success", 
+      "message": "Schedule deployed as: wu049-projects-test_project-schedule.sch"}
+
+    s3_resource = boto3.resource('s3')
+    bucket = s3_resource.Bucket('atcaschedules')
+    objects = list(bucket.objects.all())
+    found = False
+    for obj in objects:
+      if obj.key == 'wu049-projects-test_project-schedule.sch':
+        found = True
+    
+    assert found
+
 
   def test_create_project(self, test_client):
     # create project
@@ -105,6 +125,10 @@ class TestClass:
     assert response.json_body['status'] == 'success'
     assert response.json_body['file_content'] == json.loads(schedule)
 
+    # check deploy
+    self.deploy_schedule(test_client)
+
+
   def save_file(self, filename, test_filename, test_client):
     # save targets.csv
     filename = PROJECT_NAME + '/' + filename
@@ -127,3 +151,6 @@ class TestClass:
     }
 
     return content
+
+
+  # TODO: add a few failure cases

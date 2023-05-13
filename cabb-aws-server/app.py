@@ -3,6 +3,9 @@ import json
 import os
 import copy
 import pathlib
+import boto3
+from botocore.exceptions import ClientError
+
 
 cors_config = CORSConfig(
     allow_origin='http://bigcatcabb.s3-website-us-east-1.amazonaws.com',
@@ -55,6 +58,8 @@ PROJECT_JSON= {
 #
 
 app = Chalice(app_name='cabb-aws-server')
+s3_client = boto3.client('s3')
+
 
 @app.route('/')
 def hello_world():
@@ -103,7 +108,7 @@ def list_files():
   if not project:
     return json.dumps(files, indent=4)
 
-  full_project_name = get_filename(project, 'wu049')
+  full_project_name = get_filename(project, USER_ID)
   if not full_project_name:
     return json.dumps(files, indent=4)
 
@@ -123,7 +128,7 @@ def list_files():
 
 @app.route('/list', cors=cors_config)
 def list_directory():
-  obj = get_dir_content(BASE_DIRECTORY.format(user='wu049'))
+  obj = get_dir_content(BASE_DIRECTORY.format(user=USER_ID))
   return json.dumps(obj, indent=4)
 
 def retrieve_file(fullname):
@@ -141,7 +146,7 @@ def retrieve_file(fullname):
 def create_project():
   request = app.current_request
   project_name = request.query_params.get('project', '')
-  full_filename = get_filename(project_name, 'wu049')
+  full_filename = get_filename(project_name, USER_ID)
 
   if not full_filename:
     result = {
@@ -185,26 +190,14 @@ def create_project():
   }
   return json.dumps(result)
 
-
-@app.route('/retrieve_project', cors=cors_config)
-def retrieve_project():
-  request = app.current_request
-  project_name = request.query_params.get('project', '')
-  full_filename = get_filename(project_name, 'wu049')
+def get_project(project_name, schedule=None):
+  full_filename = get_filename(project_name, USER_ID)
 
   if not full_filename:
-    result = {
-        'status': 'fail',
-        'message': 'Project does not exist'
-    }
-    return json.dumps(result)
+    raise Exception('Project does not exist')
 
   if not os.path.exists(full_filename):
-    result = {
-        'status': 'fail',
-        'message': 'Project does not exist!'
-    }
-    return json.dumps(result)
+    raise Exception('Project does not exist')
   
   # retrieve from directory
   # - project.json
@@ -239,27 +232,86 @@ def retrieve_project():
   else:
     corr_config = []
 
-  results = []
-  results += [each for each in os.listdir(full_filename)
-              if each.endswith('.sch')]
-  
   result = {
       'status': 'success',
       'project': project_json,
       'band_configuration_file': band_config,
       'correlator_configuration_file': corr_config,
-      'schedule_files': results,
       'target_file': target
   }
-  return json.dumps(result)
 
+  if schedule:
+    # retrieve schedule file
+    schedule_file = full_filename + '/' + schedule
+    content = retrieve_file(schedule_file)
+    if content:
+      schedule_content = json.loads(content)
+      result['schedule_file'] = schedule_content
+    else:
+      raise Exception('Schedule does not exist')
+  else:
+    results = []
+    results += [each for each in os.listdir(full_filename)
+                if each.endswith('.sch')]
+    result['schedule_files'] = results
+
+  return result
+
+
+@app.route('/retrieve_project', cors=cors_config)
+def retrieve_project():
+  request = app.current_request
+  project_name = request.query_params.get('project', '')
+
+  try:
+    result = get_project(project_name=project_name)
+    return json.dumps(result)
+  except:
+    result = {
+        'status': 'fail',
+        'message': 'Project does not exist'
+    }
+    return json.dumps(result)
+
+
+@app.route('/deploy_schedule', cors=cors_config)
+def deploy_schedule():
+  request = app.current_request
+  schedule = request.query_params.get('schedule', '')
+  project_name = request.query_params.get('project', '')
+  try:
+    result = get_project(project_name=project_name, schedule=schedule)
+    # write content to s3 bucket
+    s3_name = USER_ID + '-' + project_name + '-' + schedule
+    s3_name = s3_name.replace('/', '-')
+    s3_client.put_object(
+      Body = json.dumps(result), 
+      Bucket = 'atcaschedules', 
+      Key = s3_name)
+    result = {
+        'status': 'success',
+        'message': 'Schedule deployed as: ' + s3_name
+    }
+  except ClientError as e:
+    result = {
+        'status': 'fail',
+        'message': 'Failed to deploy'
+    }
+  except Exception as  ex:
+    result = {
+        'status': 'fail',
+        'message': 'Failed to deploy'
+    }
+
+  return json.dumps(result)
+    
 
 @app.route('/get_file_content', cors=cors_config)
 def get_file():
   request = app.current_request
   filename = request.query_params.get('filename', '')
 
-  full_filename = get_filename(filename, 'wu049')
+  full_filename = get_filename(filename, USER_ID)
 
   if not full_filename:
     result = {
@@ -313,7 +365,7 @@ def save_file():
     try:
       filename = data.get('filename', '')
       filecontent = data.get('content', '')
-      full_filename = get_filename(filename, 'wu049')
+      full_filename = get_filename(filename, USER_ID)
 
       if not full_filename or not filecontent:
         result = {
@@ -335,23 +387,10 @@ def save_file():
           'message': 'Saved'
       }
       return json.dumps(result)
-      # return Response(body=json.dumps(result),
-      #           status_code=200,
-      #           headers=
-      #           {'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      #             'access-control-allow-origin': 
-      #               'http://bigcatcabb.s3-website-us-east-1.amazonaws.com'
-      #           })
+
     except Exception as e:
       result = {
           'status': 'fail',
           'message': 'Could not save changes'
       }
       return json.dumps(result)
-      # return Response(body=json.dumps(result),
-      #           status_code=200,
-      #           headers=
-      #           {'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      #             'access-control-allow-origin': 
-      #               'http://bigcatcabb.s3-website-us-east-1.amazonaws.com'
-      #           })
