@@ -81,6 +81,11 @@ export default function Schedule() {
     setOpenDeployFileDialog(true);
   }
 
+  const doDeploy = () => {
+    scheduleContext.deploySchedule();
+    setOpenDeployFileDialog(false);
+  }
+
   const handleSaveAs = () => {
     setOpenSaveFileDialog(true);
     setMenuAnchorEl(null);
@@ -139,7 +144,7 @@ export default function Schedule() {
         project={scheduleContext.projectName} 
         schedule_content={JSON.stringify(scheduleContext.schedule, null, 4)}
         filename={scheduleContext.filename}
-        handleDeploy={scheduleContext.deploySchedule}
+        handleDeploy={doDeploy}
         handleCancel={() => setOpenDeployFileDialog(false)}
       />
 

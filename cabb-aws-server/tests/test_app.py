@@ -47,14 +47,14 @@ class TestClass:
       '/deploy_schedule?project=' + PROJECT_NAME + '&schedule=schedule.sch')
 
     assert response.json_body == {"status": "success", 
-      "message": "Schedule deployed as: wu049-projects-test_project-schedule.sch"}
+      "message": "Schedule deployed as: wu049-projects-test_project-schedule.json"}
 
     s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket('atcaschedules')
     objects = list(bucket.objects.all())
     found = False
     for obj in objects:
-      if obj.key == 'wu049-projects-test_project-schedule.sch':
+      if obj.key == 'wu049-projects-test_project-schedule.json':
         found = True
     
     assert found

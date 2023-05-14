@@ -197,7 +197,7 @@ def deploy_schedule():
 
     if result:
       # write to directory
-      full_name = USER_ID + '-' + project_name + '-' + schedule
+      full_name = USER_ID + '-' + project_name + '-' + schedule.replace('.sch', '.json')
       full_name = full_name.replace('/', '-')
 
       with open(DEPLOY_DIRECTORY + '/' + full_name, 'w') as f:
@@ -205,7 +205,7 @@ def deploy_schedule():
         f.close()
 
       result = {
-          'status': 'fail',
+        'status': 'success',
         'message': 'Schedule deployed as: ' + full_name
       }
     else:

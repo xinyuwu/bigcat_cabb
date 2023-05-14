@@ -282,7 +282,7 @@ def deploy_schedule():
   try:
     result = get_project(project_name=project_name, schedule=schedule)
     # write content to s3 bucket
-    s3_name = USER_ID + '-' + project_name + '-' + schedule
+    s3_name = USER_ID + '-' + project_name + '-' + schedule.replace('.sch', '.json')
     s3_name = s3_name.replace('/', '-')
     s3_client.put_object(
       Body = json.dumps(result), 
