@@ -265,13 +265,13 @@ def retrieve_project():
 
   try:
     result = get_project(project_name=project_name)
-    return json.dumps(result)
   except:
     result = {
         'status': 'fail',
         'message': 'Project does not exist'
     }
-    return json.dumps(result)
+
+  return json.dumps(result)
 
 
 @app.route('/deploy_schedule', cors=cors_config)

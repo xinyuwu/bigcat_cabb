@@ -23,15 +23,18 @@ export const INIT_SCHEDULE_FILE = {
 export const ScheduleContext = React.createContext({
   filename: '' as string,
   projectName: '' as string,
+  schedule: {} as any,
   getScheduleInfo: (): any => { return {} },
   getScans: () : any[] => { return []},
   updateScheduleInfo: (scheduleInfo: any) => {},
   updateScans: (scans: any[]) => { },
 
+  deploySchedule: () => {},
   saveSchedule: () => {},
   saveAsSchedule: (fname: string) => { },
   isDirty: false, 
   setIsDirty: (d: boolean) => { },
+
 });
 
 export default function ScheduleContextProvider(props: any) {
@@ -120,6 +123,41 @@ export default function ScheduleContextProvider(props: any) {
     setIsDirty(true);
   }
 
+  const deploySchedule = () => {
+    if (!filename) {
+      return;
+    }
+    const pname = encodeURIComponent(projectName);
+    const sname = encodeURIComponent(filename);
+
+    fetch(`${SERVER_ROOT_URL}/deploy_schedule?project=${pname}&schedule=${sname}`)
+      .then(
+        response => response.json()
+      )
+      .then((response) => {
+        if (response['status'] === 'success') {
+          setIsDirty(false);
+          setSnackMessage({
+            severity: 'success',
+            message: response['message']
+          });
+        } else {
+          const message = response['message'];
+          if (message)
+            setSnackMessage({
+              severity: 'error',
+              message: message
+            });
+        }
+      })
+      .catch((err: Error) => {
+        setSnackMessage({
+          severity: 'error',
+          message: 'Could not deploy schedule!'
+        });
+      });
+  }
+
   const saveSchedule = () => {
     if (filename) {
       saveAsSchedule(filename);
@@ -175,7 +213,9 @@ export default function ScheduleContextProvider(props: any) {
     saveSchedule: saveSchedule,
     saveAsSchedule: saveAsSchedule,
     isDirty: isDirty, 
-    setIsDirty: setIsDirty
+    setIsDirty: setIsDirty,
+    schedule: schedule,
+    deploySchedule: deploySchedule
   }}>
     {props.children}
 

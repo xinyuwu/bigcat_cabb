@@ -14,6 +14,8 @@ import ScheduleScanView from './ScheduleScanView';
 import { ProjectContext } from './ProjectContext';
 import { ScheduleContext } from './ScheduleContext';
 import SaveScheduleDialog from '../components/SaveScheduleDialog';
+import DeployScheduleDialog from '../components/DeployScheduleDialog';
+
 
 export const INIT_SCHEDULE_FILE = {
     document: 'ATCA BIGCAT scheduler file',
@@ -38,6 +40,7 @@ export default function Schedule() {
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
   const [openSaveFileDialog, setOpenSaveFileDialog] = React.useState(false);
+  const [openDeployFileDialog, setOpenDeployFileDialog] = React.useState(false);
   const [snackMessage, setSnackMessage] = React.useState<any>(null);
 
 
@@ -70,6 +73,13 @@ export default function Schedule() {
     }
     return () => clearInterval(interval);
   }, [projectContext.autoSave, scheduleContext.isDirty, scheduleContext]);
+
+  const handleDeploy = () => {
+    // display the deploy content and file name in Dialog
+    // (give user a chance to download it)
+    setMenuAnchorEl(null);
+    setOpenDeployFileDialog(true);
+  }
 
   const handleSaveAs = () => {
     setOpenSaveFileDialog(true);
@@ -122,6 +132,15 @@ export default function Schedule() {
         rootPath={scheduleContext.projectName} 
         handleSave={doSaveSchedule} 
         handleCancel={() => setOpenSaveFileDialog(false)}
+      />
+
+      <DeployScheduleDialog
+        open={openDeployFileDialog}
+        project={scheduleContext.projectName} 
+        schedule_content={JSON.stringify(scheduleContext.schedule, null, 4)}
+        filename={scheduleContext.filename}
+        handleDeploy={scheduleContext.deploySchedule}
+        handleCancel={() => setOpenDeployFileDialog(false)}
       />
 
       <Stack direction="row" spacing={0} 
@@ -192,7 +211,7 @@ export default function Schedule() {
 
             <Divider />
 
-            <MenuItem>
+            <MenuItem onClick={handleDeploy}>
               <ListItemIcon>
                 <OutboundIcon />
               </ListItemIcon>

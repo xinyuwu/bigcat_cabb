@@ -4,7 +4,10 @@ import os
 import copy
 import pathlib
 
-BASE_DIRECTORY = '/notebooks/jupyterhub-user-{user}'
+# BASE_DIRECTORY = '/notebooks/jupyterhub-user-{user}'
+BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
+DEPLOY_DIRECTORY = '/Users/wu049/bigcat_cabb/cabb-server/schedule-sync-dir'
+
 USER_ID = 'wu049'
 
 PROJECT_FILE = 'project.json'
@@ -184,70 +187,54 @@ def create_project():
   return flask.jsonify(result)
 
 
+@app.route('/deploy_schedule')
+def deploy_schedule():
+  request = flask.request
+  schedule = request.args.get('schedule', '')
+  project_name = request.args.get('project', '')
+  try:
+    result = get_project(project_name=project_name, schedule=schedule)
+
+    if result:
+      # write to directory
+      full_name = USER_ID + '-' + project_name + '-' + schedule
+      full_name = full_name.replace('/', '-')
+
+      with open(DEPLOY_DIRECTORY + '/' + full_name, 'w') as f:
+        f.write(json.dumps(result, indent=4))
+        f.close()
+
+      result = {
+          'status': 'fail',
+        'message': 'Schedule deployed as: ' + full_name
+      }
+    else:
+      result = {
+          'status': 'fail',
+          'message': 'Failed to deploy'
+      }
+  except:
+    result = {
+        'status': 'fail',
+        'message': 'Failed to deploy'
+    }
+
+  return flask.jsonify(result)
+
+
 @app.route('/retrieve_project')
 def retrieve_project():
-  project_name = flask.request.args.get('project', '')
-  full_filename = get_filename(project_name, 'wu049')
+  request = flask.request
+  project_name = request.args.get('project', '')
 
-  if not full_filename:
+  try:
+    result = get_project(project_name=project_name)
+  except:
     result = {
         'status': 'fail',
         'message': 'Project does not exist'
     }
-    return flask.jsonify(result)
 
-  if not os.path.exists(full_filename):
-    result = {
-        'status': 'fail',
-        'message': 'Project does not exist!'
-    }
-    return flask.jsonify(result)
-  
-  # retrieve from directory
-  # - project.json
-  # - band_configuration.json
-  # - correlator_configuration.json
-  # - targets.csv
-  project_file = full_filename + '/' + PROJECT_FILE
-  with open(project_file) as fp:
-    project_json = json.load(fp)
-
-  band_config_file = full_filename + '/' + \
-      project_json.get('band_configuration_file', 
-                       PROJECT_JSON['band_configuration_file'])
-  content = retrieve_file(band_config_file)
-  if content:
-    band_config = json.loads(content)
-  else:
-    band_config = []
-
-  target_file = full_filename + '/' + \
-      project_json.get('target_file', PROJECT_JSON['target_file'])
-  content = retrieve_file(target_file)
-  target = content
-
-  corr_config_file = full_filename + '/' + \
-      project_json.get('correlator_configuration_file', 
-                       PROJECT_JSON['correlator_configuration_file'])
-  content = retrieve_file(corr_config_file)
-
-  if content:
-    corr_config = json.loads(content)
-  else:
-    corr_config = []
-
-  results = []
-  results += [each for each in os.listdir(full_filename)
-              if each.endswith('.sch')]
-  
-  result = {
-      'status': 'success',
-      'project': project_json,
-      'band_configuration_file': band_config,
-      'correlator_configuration_file': corr_config,
-      'schedule_files': results,
-      'target_file': target
-  }
   return flask.jsonify(result)
 
 
@@ -330,13 +317,81 @@ def save_file():
           'status': 'success',
           'message': 'Saved'
       }
-      return flask.jsonify(result)
     except Exception as e:
       result = {
           'status': 'fail',
           'message': 'Could not save changes'
       }
-      return flask.jsonify(result)
+
+    return flask.jsonify(result)
+
+
+def get_project(project_name, schedule=None):
+  full_filename = get_filename(project_name, USER_ID)
+
+  if not full_filename:
+    raise Exception('Project does not exist')
+
+  if not os.path.exists(full_filename):
+    raise Exception('Project does not exist')
+  
+  # retrieve from directory
+  # - project.json
+  # - band_configuration.json
+  # - correlator_configuration.json
+  # - targets.csv
+  project_file = full_filename + '/' + PROJECT_FILE
+  with open(project_file) as fp:
+    project_json = json.load(fp)
+
+  band_config_file = full_filename + '/' + \
+      project_json.get('band_configuration_file', 
+                       PROJECT_JSON['band_configuration_file'])
+  content = retrieve_file(band_config_file)
+  if content:
+    band_config = json.loads(content)
+  else:
+    band_config = []
+
+  target_file = full_filename + '/' + \
+      project_json.get('target_file', PROJECT_JSON['target_file'])
+  content = retrieve_file(target_file)
+  target = content
+
+  corr_config_file = full_filename + '/' + \
+      project_json.get('correlator_configuration_file', 
+                       PROJECT_JSON['correlator_configuration_file'])
+  content = retrieve_file(corr_config_file)
+
+  if content:
+    corr_config = json.loads(content)
+  else:
+    corr_config = []
+
+  result = {
+      'status': 'success',
+      'project': project_json,
+      'band_configuration_file': band_config,
+      'correlator_configuration_file': corr_config,
+      'target_file': target
+  }
+
+  if schedule:
+    # retrieve schedule file
+    schedule_file = full_filename + '/' + schedule
+    content = retrieve_file(schedule_file)
+    if content:
+      schedule_content = json.loads(content)
+      result['schedule_file'] = schedule_content
+    else:
+      raise Exception('Schedule does not exist')
+  else:
+    results = []
+    results += [each for each in os.listdir(full_filename)
+                if each.endswith('.sch')]
+    result['schedule_files'] = results
+
+  return result
 
 
 if __name__ == '__main__':
