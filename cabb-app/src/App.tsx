@@ -11,10 +11,11 @@ import ProjectContextProvider from './schedule/ProjectContext';
 import { useLocation } from 'react-router-dom';
 import TargetCatalogueView from './schedule/TargetCatalogueView';
 import ScheduleContextProvider from './schedule/ScheduleContext';
-import { Amplify, Auth, Hub, API } from 'aws-amplify'
+import { Amplify, Auth } from 'aws-amplify'
 
 import './App.css';
 
+const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
 Amplify.configure({
   "API": {
@@ -22,6 +23,10 @@ Amplify.configure({
       {
         "name": "hello",
         "endpoint": "https://mzceiq8h3b.execute-api.us-east-1.amazonaws.com/api"
+      },
+      {
+        "name": "cabb",
+        "endpoint": SERVER_ROOT_URL
       }
     ]
   },
@@ -108,12 +113,12 @@ function App() {
 
   // check if a user is loggin, redirect to login page if not
   Auth.currentSession()
-    .then((data) => {
-      console.log('user logged in: ' + data);
+    .then((data: any) => {
+      console.log('user logged in: ' + data['idToken']['payload']['email']);
     })
     .catch((err) => {
         console.log('not logged in: ' + err);
-        // Auth.federatedSignIn()
+        Auth.federatedSignIn()
     });
 
   return (

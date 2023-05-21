@@ -33,7 +33,6 @@ export default function Project() {
         };
 
         API.get('hello', '/get_name', request).then(response => {
-          // Add your code here
           setHello(JSON.stringify(response));
         }).catch(error => {
           console.log(JSON.stringify(error));

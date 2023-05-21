@@ -2,6 +2,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Box, Snackbar, Alert, TextField } from "@mui/material";
 import * as React from "react";
 import FileBrowser from "./FileBrowser";
+import call_API from '../util/CognitoAuthorizor';
 
 const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
@@ -18,24 +19,21 @@ export default function CreateFileDialog(
   const [openSnack, setOpenSnack] = React.useState(false);
   const [newName, setNewName] = React.useState<string>('');
 
-  
   React.useEffect(() => {
     setPaths([]);
     setSelectedItem(null);
     if (props.open) {
-      // get directories from the backend
-      fetch(`${SERVER_ROOT_URL}/list`)
-        .then(
-          response => response.json()
-        )
-        .then((response) => {
-          setPaths(response);
-        })
-        .catch((err: Error) => {
-          setOpenSnack(true);
-        });
+      call_API('cabb', '/list', handleReponse, handleError);
     }
   }, [props.open]);
+
+  const handleReponse = (response: any) => {
+    setPaths(response as any[]);
+  }
+
+  const handleError = (error: any) => {
+    setOpenSnack(true);
+  }
 
   const handleCancel = () => {
     setSelectedItem(null);
