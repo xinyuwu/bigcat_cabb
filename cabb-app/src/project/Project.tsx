@@ -9,13 +9,41 @@ import OpenFileDialog from '../components/OpenFileDialog';
 import * as ATCAConstants from '../util/ATCAConstants'
 import CreateFileDialog from '../components/CreateFileDialog';
 import { useNavigate, createSearchParams } from 'react-router-dom';
-
+import { Auth, API } from 'aws-amplify'
 
 export default function Project() {
   const navigate = useNavigate();
 
   const [openCreateProjectFileDialog, setOpenCreateProjectFileDialog] = React.useState(false);
   const [openProjectFileDialog, setOpenProjectFileDialog] = React.useState(false);
+
+  const [hello, setHello] = React.useState('');
+
+  const [token, setToken] = React.useState<any>({});
+
+  Auth.currentAuthenticatedUser()
+  .then((user) => {
+    console.log(user);
+    setToken(user['signInUserSession']['idToken']['jwtToken']);
+  })
+  .catch((err) => console.log(err));
+
+  const sayHello = () => {
+    const request = {
+      body: {
+      },
+      headers: {
+        Authorization: token
+      }
+    };
+
+    API.get('hello', '/get_name', request).then(response => {
+      // Add your code here
+      setHello(JSON.stringify(response));
+    }).catch(error => {
+      console.log(JSON.stringify(error));
+    })
+  }
 
   const createProject = () => {
     setOpenCreateProjectFileDialog(true);
@@ -108,6 +136,25 @@ export default function Project() {
           onClick={openProject}>
           Import Project
         </Button>
+
+        <Button variant="text" size='large'
+          startIcon={<DriveFolderUploadOutlinedIcon />}
+          onClick={sayHello}>
+          Hello {hello}
+        </Button>
+
+        <Button variant="text" size='large'
+          startIcon={<DriveFolderUploadOutlinedIcon />}
+          onClick={() => Auth.federatedSignIn()}>
+          Login
+        </Button>
+
+        <Button variant="text" size='large'
+          startIcon={<DriveFolderUploadOutlinedIcon />}
+          onClick={() => Auth.signOut()}>
+          Logout
+        </Button>
+
       </Stack>
 
       <OpenFileDialog open={openProjectFileDialog}

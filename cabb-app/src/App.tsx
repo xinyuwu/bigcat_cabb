@@ -11,10 +11,110 @@ import ProjectContextProvider from './schedule/ProjectContext';
 import { useLocation } from 'react-router-dom';
 import TargetCatalogueView from './schedule/TargetCatalogueView';
 import ScheduleContextProvider from './schedule/ScheduleContext';
+import { Amplify, Auth, Hub, API } from 'aws-amplify'
+
 import './App.css';
+
+
+Amplify.configure({
+  "API": {
+    "endpoints": [
+      {
+        "name": "hello",
+        "endpoint": "https://mzceiq8h3b.execute-api.us-east-1.amazonaws.com/api"
+      }
+    ]
+  },
+  Auth: {
+    // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
+    // identityPoolId: 'XX-XXXX-X:XXXXXXXX-XXXX-1234-abcd-1234567890ab',
+
+    // REQUIRED - Amazon Cognito Region
+    region: 'us-east-1',
+
+    // OPTIONAL - Amazon Cognito Federated Identity Pool Region
+    // Required only if it's different from Amazon Cognito Region
+    // identityPoolRegion: 'XX-XXXX-X',
+
+    // OPTIONAL - Amazon Cognito User Pool ID
+    userPoolId: 'us-east-1_oSMtMT3nD',
+
+    // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
+    userPoolWebClientId: '44pap5hu4e804d1rlkhq4r77a6',
+
+    // OPTIONAL - Enforce user authentication prior to accessing AWS resources or not
+    mandatorySignIn: true,
+
+    // OPTIONAL - This is used when autoSignIn is enabled for Auth.signUp
+    // 'code' is used for Auth.confirmSignUp, 'link' is used for email link verification
+    // signUpVerificationMethod: 'code', // 'code' | 'link'
+
+    // OPTIONAL - Configuration for cookie storage
+    // Note: if the secure flag is set to true, then the cookie transmission requires a secure protocol
+    cookieStorage: {
+      // REQUIRED - Cookie domain (only required if cookieStorage is provided)
+      domain: 'localhost',
+      // OPTIONAL - Cookie path
+      path: '/',
+      // OPTIONAL - Cookie expiration in days
+      expires: 365,
+      // OPTIONAL - See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+      // 'strict' | 'lax'
+      sameSite: 'strict',
+      // OPTIONAL - Cookie secure flag
+      // Either true or false, indicating if the cookie transmission requires a secure protocol (https).
+      secure: true,
+    },
+
+    // OPTIONAL - customized storage object
+    // storage: MyStorage,
+
+    // OPTIONAL - Manually set the authentication flow type. Default is 'USER_SRP_AUTH'
+    // authenticationFlowType: 'USER_PASSWORD_AUTH',
+
+    // OPTIONAL - Manually set key value pairs that can be passed to Cognito Lambda Triggers
+    // clientMetadata: { myCustomKey: 'myCustomValue' },
+
+    // OPTIONAL - Hosted UI configuration
+    oauth: {
+      domain: 'bigcat.auth.us-east-1.amazoncognito.com',
+      scope: [
+        'phone',
+        'email',
+        'openid',
+      ],
+      redirectSignIn: 'http://localhost/bigcat-app',
+      redirectSignOut: 'http://localhost/bigcat-app',
+      responseType: 'code', // or 'token', note that REFRESH token will only be generated when the responseType is code
+    },
+  },
+});
 
 function App() {
   const location = useLocation();
+
+  // Hub.listen('auth', ({ payload: { event, data } }) => {
+  //   switch (event) {
+  //     case 'signIn':
+  //       console.log('sign in', event, data)
+  //       // this.setState({ user: data})
+  //       break
+  //     case 'signOut':
+  //       console.log('sign out')
+  //       // this.setState({ user: null })
+  //       break
+  //   }
+  // });
+
+  // check if a user is loggin, redirect to login page if not
+  Auth.currentSession()
+    .then((data) => {
+      console.log('user logged in: ' + data);
+    })
+    .catch((err) => {
+        console.log('not logged in: ' + err);
+        Auth.federatedSignIn()
+    });
 
   return (
     <div className="App">
