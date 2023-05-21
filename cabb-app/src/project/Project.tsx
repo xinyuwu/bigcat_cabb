@@ -19,30 +19,28 @@ export default function Project() {
 
   const [hello, setHello] = React.useState('');
 
-  const [token, setToken] = React.useState<any>({});
-
-  Auth.currentAuthenticatedUser()
-  .then((user) => {
-    console.log(user);
-    setToken(user['signInUserSession']['idToken']['jwtToken']);
-  })
-  .catch((err) => console.log(err));
-
   const sayHello = () => {
-    const request = {
-      body: {
-      },
-      headers: {
-        Authorization: token
-      }
-    };
+    // need to make sure we refresh the token if neccessary
+    Auth.currentAuthenticatedUser()
+      .then((user) => {
+        const token = user['signInUserSession']['idToken']['jwtToken'];
+        const request = {
+          body: {
+          },
+          headers: {
+            Authorization: token
+          }
+        };
 
-    API.get('hello', '/get_name', request).then(response => {
-      // Add your code here
-      setHello(JSON.stringify(response));
-    }).catch(error => {
-      console.log(JSON.stringify(error));
-    })
+        API.get('hello', '/get_name', request).then(response => {
+          // Add your code here
+          setHello(JSON.stringify(response));
+        }).catch(error => {
+          console.log(JSON.stringify(error));
+        })
+
+      })
+      .catch((err) => console.log('error'));
   }
 
   const createProject = () => {

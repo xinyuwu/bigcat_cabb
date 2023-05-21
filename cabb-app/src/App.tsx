@@ -113,7 +113,7 @@ function App() {
     })
     .catch((err) => {
         console.log('not logged in: ' + err);
-        Auth.federatedSignIn()
+        // Auth.federatedSignIn()
     });
 
   return (
