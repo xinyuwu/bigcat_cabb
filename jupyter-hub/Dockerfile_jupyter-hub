@@ -5,8 +5,12 @@ FROM jupyterhub/jupyterhub
 # Install dockerspawner, nativeauthenticator
 RUN python3 -m pip install --no-cache-dir \
         dockerspawner \
+        oauthenticator \
         jupyterhub-nativeauthenticator \
         jupyterlab \
         matplotlib
+
+COPY jupyter-hub/localhost.key /tmp/localhost.key
+COPY jupyter-hub/localhost.crt /tmp/localhost.crt
 
 CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]

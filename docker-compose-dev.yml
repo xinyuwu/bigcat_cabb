@@ -10,7 +10,7 @@ services:
     networks: 
       - jupyterhub-network
     ports:
-      - "8000:8000"
+      - "443:443"
     volumes:
       - "./jupyter-hub:/srv/jupyterhub"
       - "./jupyter-data:/data"
