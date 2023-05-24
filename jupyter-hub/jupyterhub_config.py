@@ -74,8 +74,9 @@ c.GenericOAuthenticator.oauth_callback_url = "https://localhost/hub/oauth_callba
 c.GenericOAuthenticator.authorize_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/authorize"
 c.GenericOAuthenticator.token_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/token"
 c.GenericOAuthenticator.userdata_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/userInfo"
-c.GenericOAuthenticator.logout_redirect_url = "https://bigcat.auth.us-east-1.amazoncognito.com/logout"
+# c.GenericOAuthenticator.logout_redirect_url = "https://localhost"
 
+c.GenericOAuthenticator.logout_redirect_url = "https://bigcat.auth.us-east-1.amazoncognito.com/logout?client_id=7d7m6trdqg7g7vicmu1h95vdrd&response_type=code&scope=email+openid+phone&redirect_uri=https://localhost/"
 # these are always the same
 c.GenericOAuthenticator.login_service = "AWSCognito"
 c.GenericOAuthenticator.username_key = "username"
