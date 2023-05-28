@@ -8,7 +8,8 @@ from botocore.exceptions import ClientError
 
 
 cors_config = CORSConfig(
-    allow_origin='http://bigcatcabb.s3-website-us-east-1.amazonaws.com',
+    # allow_origin='http://bigcatcabb.s3-website-us-east-1.amazonaws.com',
+    allow_origin='*',
     allow_headers=['X-Special-Header'],
     max_age=600,
     expose_headers=['X-Special-Header'],
