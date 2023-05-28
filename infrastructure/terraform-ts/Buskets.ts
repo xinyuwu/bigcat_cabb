@@ -41,9 +41,20 @@ export class BusketsStack extends TerraformStack {
       restrictPublicBuckets: false
     });
 
+    new S3BucketWebsiteConfiguration(this, `website-configuration`, {
+      bucket: this.webContentBucket.bucket,
+
+      indexDocument: {
+        suffix: "index.html",
+      },
+
+      errorDocument: {
+        key: "index.html", // we could put a static error page here
+      },
+    });
+
     // allow read access to all elements within the S3Bucket
-    // - i had to put the following in mannually because I don't
-    // seem to have permission
+    // - i seem to have to run deploy twice for policy to be applied
     new S3BucketPolicy(this, `s3-policy`, {
       bucket: this.webContentBucket.id,
       policy: JSON.stringify({
@@ -59,18 +70,6 @@ export class BusketsStack extends TerraformStack {
           },
         ],
       }),
-    });
-    
-    new S3BucketWebsiteConfiguration(this, `website-configuration`, {
-      bucket: this.webContentBucket.bucket,
-
-      indexDocument: {
-        suffix: "index.html",
-      },
-
-      errorDocument: {
-        key: "index.html", // we could put a static error page here
-      },
     });
 
     // create s3 bucket for deploying schedule files
