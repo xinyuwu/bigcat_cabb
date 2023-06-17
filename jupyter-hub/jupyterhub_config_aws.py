@@ -246,7 +246,7 @@ class XinyuFargateSpawner(FargateSpawner):
     # env = super().get_env()
     # env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
     # env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
-
+    env['PATH'] = env['PATH'] + ':/opt/conda/bin'
     return env
 
 
