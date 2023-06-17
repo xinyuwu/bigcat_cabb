@@ -4,13 +4,15 @@ FROM jupyterhub/jupyterhub
 
 # Install dockerspawner, nativeauthenticator
 RUN python3 -m pip install --no-cache-dir \
-        dockerspawner \
+        fargatespawner \
+        jupyterhub-idle-culler \
         oauthenticator \
         jupyterhub-nativeauthenticator \
-        jupyterlab \
         matplotlib
 
-COPY jupyter-hub/localhost.key /tmp/localhost.key
-COPY jupyter-hub/localhost.crt /tmp/localhost.crt
+COPY ./localhost.key /tmp/localhost.key
+COPY ./localhost.crt /tmp/localhost.crt
+COPY ./jupyterhub_config_aws.py /srv/jupyterhub/jupyterhub_config.py
+# COPY ./jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 
 CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
