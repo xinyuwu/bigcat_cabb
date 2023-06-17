@@ -10,19 +10,20 @@ from fargatespawner import FargateSpawner
 import socket
 
 class XinyuFargateSpawner(FargateSpawner):
+  
   def get_env(self):
     env = super().get_env()
-    hostname = socket.gethostbyname(socket.gethostname())
-    self.hub.connect_ip = hostname
-    env = super().get_env()
-    env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
-    env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
+    # hostname = socket.gethostbyname(socket.gethostname())
+    # self.hub.connect_ip = hostname
+    # env = super().get_env()
+    # env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
+    # env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
 
     return env
 
 c.JupyterHub.spawner_class = XinyuFargateSpawner
-c.XinyuFargateSpawner.aws_region = 'us-east-1'
-c.XinyuFargateSpawner.aws_ecs_host = 'ecs.us-east-1.amazonaws.com'
+c.XinyuFargateSpawner.aws_region = 'ap-southeast-2'
+c.XinyuFargateSpawner.aws_ecs_host = 'ecs.ap-southeast-2.amazonaws.com'
 c.XinyuFargateSpawner.notebook_port = 8888
 c.XinyuFargateSpawner.notebook_scheme = 'http'
 
@@ -43,6 +44,7 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
             ],
             'name': 'bigcat-jupyter',
         }],
+        
     },
     'count': 1,
     'launchType': 'FARGATE',
@@ -58,8 +60,6 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
 
 from fargatespawner import FargateSpawnerSecretAccessKeyAuthentication
 c.XinyuFargateSpawner.authentication_class = FargateSpawnerSecretAccessKeyAuthentication
-c.FargateSpawnerSecretAccessKeyAuthentication.aws_access_key_id='AKIAZNT6LL2KI5YATHM4'
-c.FargateSpawnerSecretAccessKeyAuthentication.aws_secret_access_key='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'
 
 # We rely on environment variables to configure JupyterHub so that we
 # avoid having to rebuild the JupyterHub container every time we change a
