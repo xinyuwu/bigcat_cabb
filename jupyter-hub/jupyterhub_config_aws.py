@@ -26,10 +26,10 @@ task_definition = '''
       "requiresCompatibilities": [
         "FARGATE"
       ],
-      "family": "bigcat-jupyter-hub",
+      "family": "bigcat-jupyter-lab-{}",
       "containerDefinitions": [
         {{
-          "name": "bigcat-jupyter-lab-{}",
+          "name": "bigcat-jupyter-lab",
           "image": "647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository",
           "essential": true,
           "portMappings": [
@@ -65,7 +65,7 @@ task_definition = '''
         {{
           "name": "efs",
           "efsVolumeConfiguration": {{
-            "fileSystemId": "fsap-0fb6e66d747ba728e",
+            "fileSystemId": "fs-0a0d27f3160a3df8c",
             "rootDirectory": "/workarea/{}",
             "transitEncryption": "ENABLED"
           }}
@@ -185,7 +185,6 @@ async def _describe_task_definition(logger, aws_endpoint, task_definition_name):
     # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
     return described_task_definition
   except:
-    logger.error(f'could not describe: {task_definition_name}')
     return None
 
 
@@ -224,7 +223,6 @@ class XinyuFargateSpawner(FargateSpawner):
     user_name = self.user.name
     user_dir = 'jupyterhub-user-' + user_name
     definition = task_definition.format(user_name, user_dir)
-    
     response = await _register_task_definition(self.log, 
                               self._aws_endpoint(), 
                               json.loads(definition))
