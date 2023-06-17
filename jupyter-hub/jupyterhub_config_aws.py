@@ -177,12 +177,16 @@ def _aws_headers(service, access_key_id, secret_access_key,
 async def _describe_task_definition(logger, aws_endpoint, task_definition_name):
   logger.error(f'aws_endpoint: {aws_endpoint} task_definition_name: {task_definition_name}')
 
-  described_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DescribeTaskDefinition', {
-    "taskDefinition": task_definition_name
-  })
-  # response
-  # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
-  return described_task_definition
+  try:
+    described_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DescribeTaskDefinition', {
+      "taskDefinition": task_definition_name
+    })
+    # response
+    # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
+    return described_task_definition
+  except:
+    logger.error(f'could not describe: {task_definition_name}')
+    return {}
 
 
 async def _deregister_task_definition(logger, aws_endpoint, task_definition_name):
@@ -279,6 +283,8 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
 
 from fargatespawner import FargateSpawnerSecretAccessKeyAuthentication
 c.XinyuFargateSpawner.authentication_class = FargateSpawnerSecretAccessKeyAuthentication
+c.FargateSpawnerSecretAccessKeyAuthentication.aws_access_key_id=os.environ.get("aws_access_key_id")
+c.FargateSpawnerSecretAccessKeyAuthentication.aws_secret_access_key=os.environ.get("aws_secret_access_key")
 
 # We rely on environment variables to configure JupyterHub so that we
 # avoid having to rebuild the JupyterHub container every time we change a
