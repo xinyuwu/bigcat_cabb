@@ -22,60 +22,60 @@ from tornado.httpclient import (
 # need to fill in {0}
 # task_definition.format(user_name, user_dir)
 task_definition = '''
-    {
+    {{
       "requiresCompatibilities": [
         "FARGATE"
       ],
       "family": "bigcat-jupyter-hub",
       "containerDefinitions": [
-        {
-          "name": "bigcat-jupyter-lab-{0}",
+        {{
+          "name": "bigcat-jupyter-lab-{}",
           "image": "647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository",
           "essential": true,
           "portMappings": [
-            {
+            {{
               "containerPort": 8000,
               "hostPort": 8000,
               "protocol": "tcp"
-            },
-            {
+            }},
+            {{
               "containerPort": 8080,
               "hostPort": 8080,
               "protocol": "tcp"
-            }
+            }}
           ],  
           "mountPoints": [
-            {
+            {{
               "sourceVolume": "efs",
               "containerPath": "/home/jovyan"
-            }
+            }}
           ],
-          "logConfiguration": {
+          "logConfiguration": {{
             "logDriver": "awslogs",
-            "options": {
+            "options": {{
               "awslogs-create-group": "true",
               "awslogs-group": "firelens-container",
               "awslogs-region": "us-east-1",
               "awslogs-stream-prefix": "firelens"
-            }
-          }
-        }
+            }}
+          }}
+        }}
       ],
       "volumes": [
-        {
+        {{
           "name": "efs",
-          "efsVolumeConfiguration": {
+          "efsVolumeConfiguration": {{
             "fileSystemId": "fsap-0fb6e66d747ba728e",
-            "rootDirectory": "/workarea/{1}",
+            "rootDirectory": "/workarea/{}",
             "transitEncryption": "ENABLED"
-          }
-        }
+          }}
+        }}
       ],
       "networkMode": "awsvpc",
       "memory": "3 GB",
       "cpu": "1 vCPU",
       "executionRoleArn": "arn:aws:iam::647731306132:role/ecsTaskExecutionRole"
-    }
+    }}
 '''
 
 # for details of the api calls:
