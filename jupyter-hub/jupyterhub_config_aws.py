@@ -66,7 +66,7 @@ task_definition = '''
           "name": "efs",
           "efsVolumeConfiguration": {{
             "fileSystemId": "fs-0a0d27f3160a3df8c",
-            "rootDirectory": "/",
+            "rootDirectory": "/workarea",
             "transitEncryption": "ENABLED"
           }}
         }}
@@ -244,8 +244,8 @@ class XinyuFargateSpawner(FargateSpawner):
     hostname = socket.gethostbyname(socket.gethostname())
     # self.hub.connect_ip = hostname
     # env = super().get_env()
-    env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
-    env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
+    env['JUPYTERHUB_API_URL']='http://172.31.36.236:8080/hub/api'
+    env['JUPYTERHUB_ACTIVITY_URL']='http://172.31.36.236:8080/hub/api/users/wu049/activity'
     env['JUPYTERHUB_SERVICE_URL'] = env['JUPYTERHUB_SERVICE_URL'].replace('127.0.0.1:0', '0.0.0.0:8888')
 
     env['PATH'] = env['PATH'] + ':/opt/conda/bin'
