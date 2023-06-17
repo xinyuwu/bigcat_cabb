@@ -66,7 +66,7 @@ task_definition = '''
           "name": "efs",
           "efsVolumeConfiguration": {{
             "fileSystemId": "fs-0a0d27f3160a3df8c",
-            "rootDirectory": "/workarea/{}",
+            "rootDirectory": "/",
             "transitEncryption": "ENABLED"
           }}
         }}
@@ -224,7 +224,8 @@ class XinyuFargateSpawner(FargateSpawner):
       if response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
         user_name = self.user.name
         user_dir = 'jupyterhub-user-' + user_name
-        definition = task_definition.format(user_name, user_dir)
+        # definition = task_definition.format(user_name, user_dir)
+        definition = task_definition.format(user_name)
         response = await _register_task_definition(self.log, 
                                   self._aws_endpoint(), 
                                   json.loads(definition))
@@ -277,6 +278,7 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'launchType': 'FARGATE',
     'networkConfiguration': {
         'awsvpcConfiguration': {
+            'assignPublicIp': 'ENABLED',
             'securityGroups': ['sg-0506d1377ade5499c', 
                                'sg-06beb423e0e5b1006'],
             'subnets':  ['subnet-0bdf6a86c3b865030']
