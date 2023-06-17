@@ -262,6 +262,7 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'overrides': {
         'taskRoleArn': 'arn:aws:iam::647731306132:role/ecsTaskExecutionRole',
         'containerOverrides': [{
+            'name': 'jupyterhub-notebook',
             'command': spawner.cmd,
             'environment': [
                 {
