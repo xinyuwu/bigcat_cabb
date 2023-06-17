@@ -6,11 +6,130 @@ import os
 
 c = get_config()  # noqa: F821
 
-from fargatespawner import FargateSpawner
+from fargatespawner import FargateSpawner, _make_ecs_request
 import socket
+import json
+
+# need to fill in {0}
+# task_definition.format(user_name, user_dir)
+task_definition = '''
+    {
+      "requiresCompatibilities": [
+        "FARGATE"
+      ],
+      "family": "bigcat-jupyter-hub",
+      "containerDefinitions": [
+        {
+          "name": "bigcat-jupyter-lab-{0}",
+          "image": "647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository",
+          "essential": true,
+          "portMappings": [
+            {
+              "containerPort": 8000,
+              "hostPort": 8000,
+              "protocol": "tcp"
+            },
+            {
+              "containerPort": 8080,
+              "hostPort": 8080,
+              "protocol": "tcp"
+            }
+          ],  
+          "mountPoints": [
+            {
+              "sourceVolume": "efs",
+              "containerPath": "/home/jovyan"
+            }
+          ],
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-create-group": "true",
+              "awslogs-group": "firelens-container",
+              "awslogs-region": "us-east-1",
+              "awslogs-stream-prefix": "firelens"
+            }
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "efs",
+          "efsVolumeConfiguration": {
+            "fileSystemId": "fsap-0fb6e66d747ba728e",
+            "rootDirectory": "/workarea/{1}",
+            "transitEncryption": "ENABLED"
+          }
+        }
+      ],
+      "networkMode": "awsvpc",
+      "memory": "3 GB",
+      "cpu": "1 vCPU",
+      "executionRoleArn": "arn:aws:iam::647731306132:role/ecsTaskExecutionRole"
+    }
+'''
+
+# for details of the api calls:
+# https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
+
+async def _describe_task_definition(logger, aws_endpoint, task_definition_name):
+  described_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DescribeTaskDefinition', {
+    "taskDefinition": task_definition_name
+  })
+  # response
+  # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
+  return described_task_definition
+
+
+async def _deregister_task_definition(logger, aws_endpoint, task_definition_name):
+  response = await _describe_task_definition(logger, aws_endpoint, task_definition_name)
+
+  if response:
+    if response.get('taskDefinition', {}).get('revision', {}) != 'ACTIVE':
+      return None
+
+  deregistered_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DeregisterTaskDefinition', {
+    "taskDefinition": task_definition_name
+  })
+  # response
+  # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
+  return deregistered_task_definition
+
+
+async def _register_task_definition(logger, aws_endpoint, task_definition):
+  task_definition = await _make_ecs_request(logger, aws_endpoint, 'DescribeTaskDefinition', task_definition)
+  # response
+  # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
+  return task_definition
+
 
 class XinyuFargateSpawner(FargateSpawner):
-  
+
+  async def start(self):
+    # delete the task definition if it exists
+    _deregister_task_definition(self.log, 
+                                self._aws_endpoint(), 
+                                'bigcat-jupyter-lab-'+ self.user.name)
+    
+    # create the task definition
+    user_name = self.user.name
+    user_dir = 'jupyterhub-user-' + user_name
+    definition = task_definition.format(user_name, user_dir)
+    
+    response = _register_task_definition(self.log, 
+                              self._aws_endpoint(), 
+                              json.loads(definition))
+        
+    # start the task definition
+    return await super().start()
+
+  async def stop(self, now=False):
+    await super().stop()
+    # delete the task definition
+    _deregister_task_definition(self.log, 
+                                self._aws_endpoint(), 
+                                'bigcat-jupyter-lab-'+ self.user.name)
+
   def get_env(self):
     env = super().get_env()
     # hostname = socket.gethostbyname(socket.gethostname())
@@ -21,17 +140,16 @@ class XinyuFargateSpawner(FargateSpawner):
 
     return env
 
+
 c.JupyterHub.spawner_class = XinyuFargateSpawner
 c.XinyuFargateSpawner.aws_region = 'ap-southeast-2'
 c.XinyuFargateSpawner.aws_ecs_host = 'ecs.ap-southeast-2.amazonaws.com'
 c.XinyuFargateSpawner.notebook_port = 8888
 c.XinyuFargateSpawner.notebook_scheme = 'http'
 
-task_definition = os.environ["TASK_DEFINITION"]
-
 c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'cluster': 'bigcat-jupyter-cluster',
-    'taskDefinition': task_definition,
+    'taskDefinition': 'bigcat-jupyter-lab-'+ spawner.user.name,
     'overrides': {
         'taskRoleArn': 'arn:aws:iam::647731306132:role/ecsTaskExecutionRole',
         'containerOverrides': [{
@@ -42,17 +160,14 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
                     'value': value,
                 } for name, value in spawner.get_env().items()
             ],
-            'name': 'bigcat-jupyter',
-        }],
-        
+        }]
     },
     'count': 1,
     'launchType': 'FARGATE',
     'networkConfiguration': {
         'awsvpcConfiguration': {
-            'assignPublicIp': 'DISABLED',
-            'securityGroups': ['sg-06551477a4fbf0829', 
-                               'sg-0aa02da68926abcff'],
+            'securityGroups': ['sg-0506d1377ade5499c', 
+                               'sg-06beb423e0e5b1006'],
             'subnets':  ['subnet-01567bd832f484ad9']
         },
     },
@@ -60,6 +175,8 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
 
 from fargatespawner import FargateSpawnerSecretAccessKeyAuthentication
 c.XinyuFargateSpawner.authentication_class = FargateSpawnerSecretAccessKeyAuthentication
+c.FargateSpawnerSecretAccessKeyAuthentication.aws_access_key_id=''
+c.FargateSpawnerSecretAccessKeyAuthentication.aws_secret_access_key=''
 
 # We rely on environment variables to configure JupyterHub so that we
 # avoid having to rebuild the JupyterHub container every time we change a
