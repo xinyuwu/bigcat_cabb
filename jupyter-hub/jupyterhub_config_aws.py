@@ -220,15 +220,14 @@ class XinyuFargateSpawner(FargateSpawner):
        self._aws_endpoint(), 
        'bigcat-jupyter-lab-'+ self.user.name)
     
-    if response:
-      if response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
-        user_name = self.user.name
-        user_dir = 'jupyterhub-user-' + user_name
-        # definition = task_definition.format(user_name, user_dir)
-        definition = task_definition.format(user_name)
-        response = await _register_task_definition(self.log, 
-                                  self._aws_endpoint(), 
-                                  json.loads(definition))
+    if not response or response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
+      user_name = self.user.name
+      user_dir = 'jupyterhub-user-' + user_name
+      # definition = task_definition.format(user_name, user_dir)
+      definition = task_definition.format(user_name)
+      response = await _register_task_definition(self.log, 
+                                self._aws_endpoint(), 
+                                json.loads(definition))
         
     # start the task definition
     return await super().start()
