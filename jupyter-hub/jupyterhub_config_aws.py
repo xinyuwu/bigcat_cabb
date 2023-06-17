@@ -186,23 +186,24 @@ async def _describe_task_definition(logger, aws_endpoint, task_definition_name):
     return described_task_definition
   except:
     logger.error(f'could not describe: {task_definition_name}')
-    return {}
+    return None
 
 
 async def _deregister_task_definition(logger, aws_endpoint, task_definition_name):
   response = await _describe_task_definition(logger, aws_endpoint, task_definition_name)
 
   if response:
-    if response.get('taskDefinition', {}).get('revision', {}) != 'ACTIVE':
+    if response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
       return None
 
-  deregistered_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DeregisterTaskDefinition', {
-    "taskDefinition": task_definition_name
-  })
-  # response
-  # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
-  return deregistered_task_definition
+    deregistered_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DeregisterTaskDefinition', {
+      "taskDefinition": task_definition_name + ':' + str(response.get('taskDefinition', {}).get('revision', 0))
+    })
+    # response
+    # {"tag":{}, "taskDefinition": {"revision": numer, "status": "string", }}
+    return deregistered_task_definition
 
+  return None
 
 async def _register_task_definition(logger, aws_endpoint, task_definition):
   task_definition = await _make_ecs_request(logger, aws_endpoint, 'RegisterTaskDefinition', task_definition)
