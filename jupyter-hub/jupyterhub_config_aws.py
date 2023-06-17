@@ -6,9 +6,18 @@ import os
 
 c = get_config()  # noqa: F821
 
-from fargatespawner import FargateSpawner, _make_ecs_request
+from fargatespawner import FargateSpawner
 import socket
 import json
+import datetime
+import hashlib
+import hmac
+import urllib
+from tornado.httpclient import (
+    AsyncHTTPClient,
+    HTTPError,
+    HTTPRequest,
+)
 
 # need to fill in {0}
 # task_definition.format(user_name, user_dir)
@@ -71,6 +80,99 @@ task_definition = '''
 
 # for details of the api calls:
 # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Operations.html
+
+async def _make_ecs_request(logger, aws_endpoint, target, dict_data):
+    service = 'ecs'
+    body = json.dumps(dict_data).encode('utf-8')
+    credentials = await aws_endpoint['ecs_auth']()
+    pre_auth_headers = {
+        'X-Amz-Target': f'AmazonEC2ContainerServiceV20141113.{target}',
+        'Content-Type': 'application/x-amz-json-1.1',
+        **credentials.pre_auth_headers,
+    }
+    path = '/'
+    query = {}
+    headers = _aws_headers(service, credentials.access_key_id, credentials.secret_access_key,
+                           aws_endpoint['region'], aws_endpoint['ecs_host'],
+                           'POST', path, query, pre_auth_headers, body)
+    client = AsyncHTTPClient()
+    url = f'https://{aws_endpoint["ecs_host"]}{path}'
+    request = HTTPRequest(url, method='POST', headers=headers, body=body)
+    logger.debug('Making request (%s)', body)
+    try:
+        response = await client.fetch(request)
+    except HTTPError as exception:
+        logger.exception('HTTPError from ECS (%s)', exception.response.body)
+        raise
+    logger.debug('Request response (%s)', response.body)
+    return json.loads(response.body)
+
+
+def _aws_headers(service, access_key_id, secret_access_key,
+                 region, host, method, path, query, pre_auth_headers, payload):
+    algorithm = 'AWS4-HMAC-SHA256'
+
+    now = datetime.datetime.utcnow()
+    amzdate = now.strftime('%Y%m%dT%H%M%SZ')
+    datestamp = now.strftime('%Y%m%d')
+    credential_scope = f'{datestamp}/{region}/{service}/aws4_request'
+    headers_lower = {
+        header_key.lower().strip(): header_value.strip()
+        for header_key, header_value in pre_auth_headers.items()
+    }
+    required_headers = ['host', 'x-amz-content-sha256', 'x-amz-date']
+    signed_header_keys = sorted([header_key
+                                 for header_key in headers_lower.keys()] + required_headers)
+    signed_headers = ';'.join(signed_header_keys)
+    payload_hash = hashlib.sha256(payload).hexdigest()
+
+    def signature():
+        def canonical_request():
+            header_values = {
+                **headers_lower,
+                'host': host,
+                'x-amz-content-sha256': payload_hash,
+                'x-amz-date': amzdate,
+            }
+
+            canonical_uri = urllib.parse.quote(path, safe='/~')
+            query_keys = sorted(query.keys())
+            canonical_querystring = '&'.join([
+                urllib.parse.quote(key, safe='~') + '=' + urllib.parse.quote(query[key], safe='~')
+                for key in query_keys
+            ])
+            canonical_headers = ''.join([
+                header_key + ':' + header_values[header_key] + '\n'
+                for header_key in signed_header_keys
+            ])
+
+            return f'{method}\n{canonical_uri}\n{canonical_querystring}\n' + \
+                   f'{canonical_headers}\n{signed_headers}\n{payload_hash}'
+
+        def sign(key, msg):
+            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
+        string_to_sign = \
+            f'{algorithm}\n{amzdate}\n{credential_scope}\n' + \
+            hashlib.sha256(canonical_request().encode('utf-8')).hexdigest()
+
+        date_key = sign(('AWS4' + secret_access_key).encode('utf-8'), datestamp)
+        region_key = sign(date_key, region)
+        service_key = sign(region_key, service)
+        request_key = sign(service_key, 'aws4_request')
+        return sign(request_key, string_to_sign).hex()
+
+    return {
+        **pre_auth_headers,
+        'x-amz-date': amzdate,
+        'x-amz-content-sha256': payload_hash,
+        'Authorization': (
+            f'{algorithm} Credential={access_key_id}/{credential_scope}, ' +
+            f'SignedHeaders={signed_headers}, Signature=' + signature()
+        ),
+    }
+
+
 
 async def _describe_task_definition(logger, aws_endpoint, task_definition_name):
   described_task_definition = await _make_ecs_request(logger, aws_endpoint, 'DescribeTaskDefinition', {
