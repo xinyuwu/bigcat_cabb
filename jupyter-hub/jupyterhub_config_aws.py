@@ -241,11 +241,13 @@ class XinyuFargateSpawner(FargateSpawner):
 
   def get_env(self):
     env = super().get_env()
-    # hostname = socket.gethostbyname(socket.gethostname())
+    hostname = socket.gethostbyname(socket.gethostname())
     # self.hub.connect_ip = hostname
     # env = super().get_env()
-    # env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
-    # env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
+    env['JUPYTERHUB_API_URL']=f'http://{hostname}:8080/hub/api'
+    env['JUPYTERHUB_ACTIVITY_URL']=f'http://{hostname}:8080/hub/api/users/wu049/activity'
+    env['JUPYTERHUB_SERVICE_URL'] = env['JUPYTERHUB_SERVICE_URL'].replace('127.0.0.1:0', '0.0.0.0:8888')
+
     env['PATH'] = env['PATH'] + ':/opt/conda/bin'
     return env
 
