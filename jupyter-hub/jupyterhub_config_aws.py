@@ -55,7 +55,7 @@ task_definition = '''
             "options": {{
               "awslogs-create-group": "true",
               "awslogs-group": "firelens-container",
-              "awslogs-region": "us-east-1",
+              "awslogs-region": "ap-southeast-2",
               "awslogs-stream-prefix": "firelens"
             }}
           }}
@@ -256,6 +256,7 @@ c.XinyuFargateSpawner.aws_ecs_host = 'ecs.ap-southeast-2.amazonaws.com'
 c.XinyuFargateSpawner.notebook_port = 8888
 c.XinyuFargateSpawner.notebook_scheme = 'http'
 c.XinyuFargateSpawner.start_timeout = 300
+c.XinyuFargateSpawner.http_timeout = 300
 
 c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'cluster': 'bigcat-jupyter-cluster',
