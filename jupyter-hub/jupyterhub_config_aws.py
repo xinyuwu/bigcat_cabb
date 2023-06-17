@@ -214,28 +214,30 @@ async def _register_task_definition(logger, aws_endpoint, task_definition):
 class XinyuFargateSpawner(FargateSpawner):
 
   async def start(self):
-    # delete the task definition if it exists
-    await _deregister_task_definition(self.log, 
-                                self._aws_endpoint(), 
-                                'bigcat-jupyter-lab-'+ self.user.name)
+    # create the task definition if no active version exists
+    response = await _describe_task_definition(
+       self.log, 
+       self._aws_endpoint(), 
+       'bigcat-jupyter-lab-'+ self.user.name)
     
-    # create the task definition
-    user_name = self.user.name
-    user_dir = 'jupyterhub-user-' + user_name
-    definition = task_definition.format(user_name, user_dir)
-    response = await _register_task_definition(self.log, 
-                              self._aws_endpoint(), 
-                              json.loads(definition))
+    if response:
+      if response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
+        user_name = self.user.name
+        user_dir = 'jupyterhub-user-' + user_name
+        definition = task_definition.format(user_name, user_dir)
+        response = await _register_task_definition(self.log, 
+                                  self._aws_endpoint(), 
+                                  json.loads(definition))
         
     # start the task definition
     return await super().start()
 
-  async def stop(self, now=False):
-    await super().stop()
-    # delete the task definition
-    await _deregister_task_definition(self.log, 
-                                self._aws_endpoint(), 
-                                'bigcat-jupyter-lab-'+ self.user.name)
+  # async def stop(self, now=False):
+  #   await super().stop()
+  #   # delete the task definition
+  #   await _deregister_task_definition(self.log, 
+  #                               self._aws_endpoint(), 
+  #                               'bigcat-jupyter-lab-'+ self.user.name)
 
   def get_env(self):
     env = super().get_env()
