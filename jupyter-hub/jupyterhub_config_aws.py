@@ -255,6 +255,7 @@ c.XinyuFargateSpawner.aws_region = 'ap-southeast-2'
 c.XinyuFargateSpawner.aws_ecs_host = 'ecs.ap-southeast-2.amazonaws.com'
 c.XinyuFargateSpawner.notebook_port = 8888
 c.XinyuFargateSpawner.notebook_scheme = 'http'
+c.XinyuFargateSpawner.start_timeout = 300
 
 c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'cluster': 'bigcat-jupyter-cluster',
@@ -278,7 +279,7 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
         'awsvpcConfiguration': {
             'securityGroups': ['sg-0506d1377ade5499c', 
                                'sg-06beb423e0e5b1006'],
-            'subnets':  ['subnet-01567bd832f484ad9']
+            'subnets':  ['subnet-0bdf6a86c3b865030']
         },
     },
 }
