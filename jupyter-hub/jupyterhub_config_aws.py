@@ -47,7 +47,7 @@ task_definition = '''
           "mountPoints": [
             {{
               "sourceVolume": "efs",
-              "containerPath": "/home/jovyan"
+              "containerPath": "/home/jovyan/work"
             }}
           ],
           "logConfiguration": {{
@@ -66,8 +66,7 @@ task_definition = '''
           "name": "efs",
           "efsVolumeConfiguration": {{
             "fileSystemId": "fs-0a0d27f3160a3df8c",
-            "rootDirectory": "/workarea",
-            "transitEncryption": "ENABLED"
+            "rootDirectory": "/workarea/workarea/{}"
           }}
         }}
       ],
@@ -223,8 +222,7 @@ class XinyuFargateSpawner(FargateSpawner):
     if not response or response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
       user_name = self.user.name
       user_dir = 'jupyterhub-user-' + user_name
-      # definition = task_definition.format(user_name, user_dir)
-      definition = task_definition.format(user_name)
+      definition = task_definition.format(user_name, user_dir)
       response = await _register_task_definition(self.log, 
                                 self._aws_endpoint(), 
                                 json.loads(definition))
