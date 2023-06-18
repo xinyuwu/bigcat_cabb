@@ -6,6 +6,7 @@ import os
 
 c = get_config()  # noqa: F821
 
+from distutils.dir_util import copy_tree
 from fargatespawner import FargateSpawner
 import socket
 import json
@@ -47,7 +48,7 @@ task_definition = '''
           "mountPoints": [
             {{
               "sourceVolume": "efs",
-              "containerPath": "/home/jovyan/work"
+              "containerPath": "/home/jovyan"
             }}
           ],
           "logConfiguration": {{
@@ -66,7 +67,7 @@ task_definition = '''
           "name": "efs",
           "efsVolumeConfiguration": {{
             "fileSystemId": "fs-0a0d27f3160a3df8c",
-            "rootDirectory": "/workarea/workarea/{}"
+            "rootDirectory": "{}"
           }}
         }}
       ],
@@ -213,6 +214,13 @@ async def _register_task_definition(logger, aws_endpoint, task_definition):
 class XinyuFargateSpawner(FargateSpawner):
 
   async def start(self):
+    user_name = self.user.name
+    user_dir = '/efs/jupyterhub-user-' + user_name
+    # create user directory and copy some demo over if it doesn't exist
+    if not os.path.isdir(user_dir):
+       os.makedirs(user_dir)
+       copy_tree('/notebooks/default', user_dir)
+
     # create the task definition if no active version exists
     response = await _describe_task_definition(
        self.log, 
@@ -220,8 +228,6 @@ class XinyuFargateSpawner(FargateSpawner):
        'bigcat-jupyter-lab-'+ self.user.name)
     
     if not response or response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
-      user_name = self.user.name
-      user_dir = 'jupyterhub-user-' + user_name
       definition = task_definition.format(user_name, user_dir)
       response = await _register_task_definition(self.log, 
                                 self._aws_endpoint(), 
@@ -265,7 +271,7 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
         'taskRoleArn': 'arn:aws:iam::647731306132:role/ecsTaskExecutionRole',
         'containerOverrides': [{
             'name': 'bigcat-jupyter-lab',
-            'command': spawner.cmd,
+            'command': spawner.cmd + ['--notebook-dir=/home/jovyan'],
             'environment': [
                 {
                     'name': name,
