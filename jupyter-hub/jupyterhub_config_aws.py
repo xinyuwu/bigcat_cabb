@@ -37,13 +37,14 @@ c.JupyterHub.load_roles = [
     }
 ]
 
+# shut down after 5min of inaction
 c.JupyterHub.services = [
     {
         "name": "jupyterhub-idle-culler-service",
         "command": [
             sys.executable,
             "-m", "jupyterhub_idle_culler",
-            "--timeout=60",
+            "--timeout=300",
         ],
         # "admin": True,
     }
