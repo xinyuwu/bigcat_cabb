@@ -12,11 +12,17 @@ services:
     ports:
       - "80:8000"
       - "443:443"
+      - "8080:8080"
     volumes:
-      - "./jupyter-hub:/srv/jupyterhub"
-      - "../jupyter-data:/data"
+      - "./notebooks:/notebooks"
+      - "/efs:/efs"
+      - "./jupyter-data:/data"
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
     environment:
+      aws_access_key_id: ${aws_access_key_id}
+      aws_secret_access_key: ${aws_secret_access_key}
+      hostname: ${hostname}
+
       # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: admin
       # All containers will join this network
