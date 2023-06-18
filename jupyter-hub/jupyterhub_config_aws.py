@@ -253,7 +253,7 @@ class XinyuFargateSpawner(FargateSpawner):
     env['JUPYTERHUB_API_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_API_URL'])
     env['JUPYTERHUB_ACTIVITY_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_ACTIVITY_URL'])
 
-    localhost_str = '//0.0.0.0:' + str(self.notebook_port) + ':'
+    localhost_str = '//0.0.0.0:' + str(self.notebook_port) + '/'
     env['JUPYTERHUB_SERVICE_URL'] = re.sub('//.*/', localhost_str, env['JUPYTERHUB_SERVICE_URL'])
 
     env['PATH'] = env['PATH'] + ':/opt/conda/bin'
