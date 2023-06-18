@@ -3,6 +3,7 @@
 
 # Configuration file for JupyterHub
 import os
+import re
 
 c = get_config()  # noqa: F821
 
@@ -245,12 +246,15 @@ class XinyuFargateSpawner(FargateSpawner):
 
   def get_env(self):
     env = super().get_env()
-    hostname = socket.gethostbyname(socket.gethostname())
+    hostname_str = '//' + os.environ["hostname"] + ':'
     # self.hub.connect_ip = hostname
     # env = super().get_env()
-    env['JUPYTERHUB_API_URL']='http://172.31.36.236:8080/hub/api'
-    env['JUPYTERHUB_ACTIVITY_URL']='http://172.31.36.236:8080/hub/api/users/wu049/activity'
-    env['JUPYTERHUB_SERVICE_URL'] = env['JUPYTERHUB_SERVICE_URL'].replace('127.0.0.1:0', '0.0.0.0:8888')
+
+    env['JUPYTERHUB_API_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_API_URL'])
+    env['JUPYTERHUB_ACTIVITY_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_ACTIVITY_URL'])
+
+    localhost_str = '//0.0.0.0:' + str(self.notebook_port) + ':'
+    env['JUPYTERHUB_SERVICE_URL'] = re.sub('//.*/', localhost_str, env['JUPYTERHUB_SERVICE_URL'])
 
     env['PATH'] = env['PATH'] + ':/opt/conda/bin'
     return env
