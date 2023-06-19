@@ -4,18 +4,11 @@
   "stages": {
     "dev": {
       "api_gateway_stage": "api",
-      "api_gateway_endpoint_vpc": [
-        "vpc-02e7d36f4a2bc2a5d"
-      ],
-      "subnet_ids": [
-        "subnet-01567bd832f484ad9"
-      ],
-      "security_group_ids": [
-        "sg-06551477a4fbf0829",
-        "sg-0aa02da68926abcff"
-      ],
+      "api_gateway_endpoint_vpc": ["vpc-04ad0ebae19953f19"],
+      "subnet_ids": ["subnet-075aebe6ebc9ea028"],
+      "security_group_ids": ["sg-039be681c240944e5"],
       "manage_iam_role": false,
-      "iam_role_arn": "arn:aws:iam::647731306132:role/service-role/LambdaRole"
+      "iam_role_arn": "arn:aws:iam::306604607287:role/bigcat-lambda-role"
     }
   }
 }

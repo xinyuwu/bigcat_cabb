@@ -5,6 +5,9 @@ import * as aws from "@cdktf/provider-aws";
 import { IamRole } from "@cdktf/provider-aws/lib/iam-role";
 import { IamRolePolicyAttachment } from "@cdktf/provider-aws/lib/iam-role-policy-attachment";
 
+import { EcsCluster } from "@cdktf/provider-aws/lib/ecs-cluster";
+
+
 const lambdaRolePolicy = {
   "Version": "2012-10-17",
   "Statement": [
@@ -16,6 +19,20 @@ const lambdaRolePolicy = {
       "Action": "sts:AssumeRole"
     }
   ]
+}
+
+const ecsRolePolicy = {
+  "Version": "2008-10-17",
+    "Statement": [
+      {
+        "Sid": "",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "ecs-tasks.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
 }
 
 export class RoleStack extends TerraformStack {
@@ -47,6 +64,33 @@ export class RoleStack extends TerraformStack {
     new IamRolePolicyAttachment(this, 'bigcat-lambda-s3', {
       policyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
       role: role.name
+    });
+
+    new IamRolePolicyAttachment(this, 'bigcat-lambda-ec2', {
+      policyArn: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess',
+      role: role.name
+    });
+
+    // create a role for ecs tasks
+    const taskRole = new IamRole(this, "ecs-task-exec", {
+      name: 'ecsTaskExecutionRole',
+      tags: tag,
+      assumeRolePolicy: JSON.stringify(ecsRolePolicy)
+    });
+
+    new IamRolePolicyAttachment(this, 'ecs-task-exec-log', {
+      policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
+      role: taskRole.name
+    });
+
+    new IamRolePolicyAttachment(this, 'ecs-task-exec-ecr', {
+      policyArn: 'arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess',
+      role: taskRole.name
+    });
+
+    // create an ECS cluster
+    new EcsCluster(this, 'bigcat-jupyter-cluster', {
+      name: 'bigcat-jupyter-cluster'
     });
 
     // create a role to sync with schedule bucket
