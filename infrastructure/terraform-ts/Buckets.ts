@@ -6,7 +6,8 @@ import { S3BucketPolicy } from "@cdktf/provider-aws/lib/s3-bucket-policy";
 import { S3BucketPublicAccessBlock } from "@cdktf/provider-aws/lib/s3-bucket-public-access-block";
 import { S3BucketWebsiteConfiguration } from "@cdktf/provider-aws/lib/s3-bucket-website-configuration";
 
-export class BusketsStack extends TerraformStack {
+
+export class BucketsStack extends TerraformStack {
 
   webContentBucket: S3Bucket;
   scheduleBucket: S3Bucket;

@@ -11,6 +11,7 @@ import { EfsMountTarget } from "@cdktf/provider-aws/lib/efs-mount-target";
 import { EfsAccessPoint } from "@cdktf/provider-aws/lib/efs-access-point";
 
 import { TerraformOutput } from 'cdktf';
+import { SecurityGroupRule } from "@cdktf/provider-aws/lib/security-group-rule";
 
 // create instance to run jupyterhub
 // - create instance
@@ -35,7 +36,9 @@ export class EC2InstanceStack extends TerraformStack {
 
     // 👇 create Security Group for the Instance
     // allow http, http and ssh traffic from my ip (from home and work)
+    // can go outwards to anywhere
     const instanceSG = new SecurityGroup(this, 'jupyter-instance-sg', {
+      name: 'ec2-host-sg',
       tags: tag,
       ingress: [
         {
@@ -69,6 +72,25 @@ export class EC2InstanceStack extends TerraformStack {
       ]
     });
 
+
+    // 👇 create Security Group for the Instance
+    // allow http, http and ssh traffic from my ip (from home and work)
+    const jupyterTaskSG = new SecurityGroup(this, 'jupyter-task-security-group', {
+      name: 'jupyter-task-security-group',
+      tags: tag}
+    );
+
+    new SecurityGroupRule(this, 'jupyter-task-security-group-rule',
+        {
+          type: 'ingress',
+          protocol: '-1',
+          fromPort: -1,
+          toPort: -1,
+          securityGroupId: jupyterTaskSG.id,
+          sourceSecurityGroupId: jupyterTaskSG.id
+        }
+    );
+
     const defaultVpc = new DefaultVpc(this, 'bigcat-default-vpc', {
       tags: tag,
       enableDnsHostnames: true,
@@ -76,22 +98,27 @@ export class EC2InstanceStack extends TerraformStack {
     });
 
     const efsSG = new SecurityGroup(this, 'bigcat-efs-sg', {
+      name: 'full-access-to-efs',
       vpcId: defaultVpc.id,
-      ingress: [{
-        fromPort: 2049,
-        toPort: 2049,
-        protocol: "tcp",
-        securityGroups: [`${instanceSG.id}`]
-      }],
-
       egress: [{
         fromPort: 0,
         toPort: 0,
         protocol: "-1",
         cidrBlocks: ["0.0.0.0/0"]
-      }]    
+      }]
     });
 
+    new SecurityGroupRule(this, 'bigcat-efs-sg-self',
+      {
+        type: 'ingress',
+        protocol: 'tcp',
+        fromPort: 2049,
+        toPort: 2049,
+        securityGroupId: efsSG.id,
+        sourceSecurityGroupId: efsSG.id
+      }
+    );
+    
     const efs = new EfsFileSystem(this, 'bigcat-user-data', {
       tags: tag,
     });
@@ -103,11 +130,16 @@ export class EC2InstanceStack extends TerraformStack {
         uid: 1000
       },
       rootDirectory: {
-        path: "/",
-      }
+        creationInfo: {
+          ownerGid: 1000,
+          ownerUid: 1000,
+          permissions: '0755'
+        },
+        path: "/efs",
+      },
     });
 
-    const mount = `${efs.id} /mnt/efs efs _netdev,tls,accesspoint=${accessPoint.id} 0 0`
+    const mount = `${efs.id} /efs efs _netdev,tls,accesspoint=${accessPoint.id} 0 0`
     const script = [
       '#!/bin/bash',
       'sudo yum install -y docker',
@@ -116,7 +148,8 @@ export class EC2InstanceStack extends TerraformStack {
       'sudo yum install -y git',
       'sudo service docker start',
       'sudo usermod -a -G docker ec2-user',
-      'sudo mkdir -p /mnt/efs',
+      'sudo mkdir -p /efs',
+      'sudo chown ec2-user /efs',
       `sudo echo ${mount} >> /etc/fstab`,
       "sudo /usr/sbin/shutdown -r 1"
     ];
@@ -129,7 +162,7 @@ export class EC2InstanceStack extends TerraformStack {
       rootBlockDevice: {
         volumeSize: 16
       },
-      vpcSecurityGroupIds: [instanceSG.id, efsSG.id],
+      vpcSecurityGroupIds: [instanceSG.id, efsSG.id, jupyterTaskSG.id],
       userData: script.join('\n')
     });
 

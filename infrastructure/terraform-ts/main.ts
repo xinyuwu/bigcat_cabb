@@ -1,5 +1,5 @@
 import { App } from "cdktf";
-import { BusketsStack } from "./Buskets";
+import { BucketsStack } from "./Buckets";
 import { EC2InstanceStack } from "./EC2Instance";
 import { RoleStack } from "./Roles";
 
@@ -9,8 +9,13 @@ const config = {
 }
 
 const app = new App();
-new BusketsStack(app, `terraform-ts-bucket-${config['environment']}`, config);
+new BucketsStack(app, `terraform-ts-bucket-${config['environment']}`, config);
 new EC2InstanceStack(app, `terraform-ts-instance-${config['environment']}`, config);
 new RoleStack(app, `terraform-ts-roles-${config['environment']}`, config);
 
 app.synth();
+
+// To run:
+// export AWS_PROFILE =306604607287_IAMPowerUserAccess
+// cdktf destroy * -dev
+// cdktf deploy * -dev
