@@ -8,19 +8,6 @@ import sys
 
 c = get_config()  # noqa: F821
 
-from distutils.dir_util import copy_tree
-from fargatespawner import FargateSpawner
-import socket
-import json
-import datetime
-import hashlib
-import hmac
-import urllib
-from tornado.httpclient import (
-    AsyncHTTPClient,
-    HTTPError,
-    HTTPRequest,
-)
 
 c.JupyterHub.load_roles = [
     {
@@ -37,19 +24,34 @@ c.JupyterHub.load_roles = [
     }
 ]
 
-# shut down after 5min of inaction
 c.JupyterHub.services = [
     {
         "name": "jupyterhub-idle-culler-service",
         "command": [
             sys.executable,
             "-m", "jupyterhub_idle_culler",
-            "--timeout=300",
+            "--cull-every=60",
+            "--timeout=480",
         ],
         # "admin": True,
     }
 ]
 
+
+
+from distutils.dir_util import copy_tree
+from fargatespawner import FargateSpawner
+import socket
+import json
+import datetime
+import hashlib
+import hmac
+import urllib
+from tornado.httpclient import (
+    AsyncHTTPClient,
+    HTTPError,
+    HTTPRequest,
+)
 
 # need to fill in {0}
 # task_definition.format(user_name, user_dir)
@@ -305,7 +307,9 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
         'taskRoleArn': 'arn:aws:iam::647731306132:role/ecsTaskExecutionRole',
         'containerOverrides': [{
             'name': 'bigcat-jupyter-lab',
-            'command': spawner.cmd + ['--notebook-dir=/home/jovyan'],
+            'command': ['start-singleuser.sh', '--notebook-dir=/home/jovyan',
+                              '--MappingKernelManager.cull_connected=True',
+                              '--ServerApp.shutdown_no_activity_timeout=180'],
             'environment': [
                 {
                     'name': name,
