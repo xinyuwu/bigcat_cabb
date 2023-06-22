@@ -278,12 +278,12 @@ class XinyuFargateSpawner(FargateSpawner):
 
   def get_env(self):
     env = super().get_env()
-    hostname_str = '//' + os.environ["hostname"] + ':'
-    # self.hub.connect_ip = hostname
-    # env = super().get_env()
+    # hostname_str = '//' + os.environ["hostname"] + ':'
+    # # self.hub.connect_ip = hostname
+    # # env = super().get_env()
 
-    env['JUPYTERHUB_API_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_API_URL'])
-    env['JUPYTERHUB_ACTIVITY_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_ACTIVITY_URL'])
+    # env['JUPYTERHUB_API_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_API_URL'])
+    # env['JUPYTERHUB_ACTIVITY_URL']=re.sub('//.*:', hostname_str, env['JUPYTERHUB_ACTIVITY_URL'])
 
     localhost_str = '//0.0.0.0:' + str(self.notebook_port) + '/'
     env['JUPYTERHUB_SERVICE_URL'] = re.sub('//.*/', localhost_str, env['JUPYTERHUB_SERVICE_URL'])
@@ -330,10 +330,19 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     },
 }
 
-from fargatespawner import FargateSpawnerSecretAccessKeyAuthentication
-c.XinyuFargateSpawner.authentication_class = FargateSpawnerSecretAccessKeyAuthentication
-c.FargateSpawnerSecretAccessKeyAuthentication.aws_access_key_id=os.environ.get("aws_access_key_id")
-c.FargateSpawnerSecretAccessKeyAuthentication.aws_secret_access_key=os.environ.get("aws_secret_access_key")
+#
+# for running on EC2 instance
+#
+# from fargatespawner import FargateSpawnerSecretAccessKeyAuthentication
+# c.XinyuFargateSpawner.authentication_class = FargateSpawnerSecretAccessKeyAuthentication
+# c.FargateSpawnerSecretAccessKeyAuthentication.aws_access_key_id=os.environ.get("aws_access_key_id")
+# c.FargateSpawnerSecretAccessKeyAuthentication.aws_secret_access_key=os.environ.get("aws_secret_access_key")
+
+#
+# For running into ECS
+#
+from fargatespawner import FargateSpawnerECSRoleAuthentication
+c.XinyuFargateSpawner.authentication_class = FargateSpawnerECSRoleAuthentication
 
 # We rely on environment variables to configure JupyterHub so that we
 # avoid having to rebuild the JupyterHub container every time we change a
