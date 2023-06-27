@@ -16,3 +16,18 @@ COPY ./jupyterhub_config_aws.py /srv/jupyterhub/jupyterhub_config.py
 # COPY ./jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 
 CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+
+# docker build -f Dockerfile_jupyter-hub -t jupyter-hub-xinyu .
+# after building, do the following to register with aws ecr:
+# https://docs.aws.amazon.com/AmazonECS/latest/userguide/create-container-image.html
+# - aws ecr create-repository --repository-name bigcat-jupyter-repository --region ap-southeast-2
+
+# docker tag jupyter-hub-xinyu 647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-hub-repository
+# docker login -u AWS -p $(aws ecr get-login-password --region ap-southeast-2) 647731306132.dkr.ecr.ap-southeast-2.amazonaws.com
+# docker push 647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-hub-repository
+
+
+# docker tag jupyter-hub-xinyu 306604607287.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-hub-repository
+# docker login -u AWS -p $(aws ecr get-login-password --region ap-southeast-2) 306604607287.dkr.ecr.ap-southeast-2.amazonaws.com
+# docker push 306604607287.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-hub-repository
+

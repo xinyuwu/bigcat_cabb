@@ -1,12 +1,12 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-FROM jupyter/minimal-notebook:latest
+FROM jupyter/minimal-notebook:lab-3.6.3
 
 RUN python3 -m pip install --no-cache-dir \
+        jupyterlab-git \
         matplotlib \
         numpy \
-        astropy \
-        jupyterlab-git
+        astropy
 
 # docker build -t minimal-notebook-xinyu .
 # after building, do the following to register with aws ecr:
@@ -18,6 +18,6 @@ RUN python3 -m pip install --no-cache-dir \
 # docker push 647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository
 
 
-# docker tag minimal-notebook-xinyu 306604607287.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository
-# docker login -u AWS -p $(aws ecr get-login-password --region ap-southeast-2) 306604607287.dkr.ecr.ap-southeast-2.amazonaws.com
-# docker push 647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository
+# docker tag minimal-notebook-xinyu 433806478421.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository
+# docker login -u AWS -p $(aws ecr get-login-password --region ap-southeast-2) 433806478421.dkr.ecr.ap-southeast-2.amazonaws.com
+# docker push 433806478421.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository

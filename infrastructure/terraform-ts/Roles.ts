@@ -4,9 +4,9 @@ import * as aws from "@cdktf/provider-aws";
 
 import { IamRole } from "@cdktf/provider-aws/lib/iam-role";
 import { IamRolePolicyAttachment } from "@cdktf/provider-aws/lib/iam-role-policy-attachment";
+import { IamRolePolicy } from "@cdktf/provider-aws/lib/iam-role-policy";
 
-import { EcsCluster } from "@cdktf/provider-aws/lib/ecs-cluster";
-
+import {ResourceNames} from './ResourceNames'
 
 const lambdaRolePolicy = {
   "Version": "2012-10-17",
@@ -37,60 +37,117 @@ const ecsRolePolicy = {
 
 export class RoleStack extends TerraformStack {
 
-  constructor(scope: Construct, id: string, config: any) {
+  taskRole: IamRole;
+  executionRole: IamRole;
+
+
+  constructor(scope: Construct, id: string, resources: ResourceNames) {
     super(scope, id);
 
     new aws.provider.AwsProvider(this, "aws", {
-      region: config['region']
+      region: resources.config['region']
     });
 
     const tag = {
       'Terraform': "true",
-      "Environment": config['environment']
+      "Environment": resources.config['environment']
     };
 
     // create a role for lambda functions 
-    const role = new IamRole(this, "lambda-exec", {
-      name: 'bigcat-lambda-role',
+    const role = new IamRole(this, resources.LAMBDA_ROLE_NAME, {
+      name: resources.LAMBDA_ROLE_NAME,
       tags: tag,
       assumeRolePolicy: JSON.stringify(lambdaRolePolicy)
     });
 
-    new IamRolePolicyAttachment(this, 'bigcat-lambda-exec', {
-      policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-      role: role.name
+    new IamRolePolicyAttachment(this, 
+      resources.LAMBDA_ROLE_NAME + '_execution', 
+      {
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+        role: role.name
     });
 
-    new IamRolePolicyAttachment(this, 'bigcat-lambda-s3', {
-      policyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
-      role: role.name
+    new IamRolePolicyAttachment(this, 
+      resources.LAMBDA_ROLE_NAME + '_s3-access', 
+      {
+        policyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
+        role: role.name
     });
 
-    new IamRolePolicyAttachment(this, 'bigcat-lambda-ec2', {
-      policyArn: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess',
-      role: role.name
+    new IamRolePolicyAttachment(this, 
+      resources.LAMBDA_ROLE_NAME + '_ec2-access', 
+      {
+        policyArn: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess',
+        role: role.name
     });
+
+    // create a role for ecs task execution
+    this.executionRole = new IamRole(this, 
+      resources.ECS_TASK_EXCUTION_ROLE_NAME, 
+      {
+        name: resources.ECS_TASK_EXCUTION_ROLE_NAME,
+        tags: tag,
+        assumeRolePolicy: JSON.stringify(ecsRolePolicy)
+    });
+
+    new IamRolePolicyAttachment(this, 
+      resources.ECS_TASK_EXCUTION_ROLE_NAME + '_ecs-task-execution',
+      {
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
+        role: this.executionRole.name
+    });
+
+    new IamRolePolicyAttachment(this, 
+      resources.ECS_TASK_EXCUTION_ROLE_NAME + '_ecr-access', 
+      {
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess',
+        role: this.executionRole.name
+    });
+
+    new IamRolePolicyAttachment(this,
+      resources.ECS_TASK_EXCUTION_ROLE_NAME + '_log-access',
+      {
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs',
+        role: this.executionRole.name
+      });
+
+
+    // allow to carry out various ecs tasks, such as DescribeTaskDefinition, RegisterTaskDefinition
+    const taskRolePolicy = {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "",
+          "Effect": "Allow",
+          "Action": [
+            "ecs:*",
+            "iam:PassRole"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
 
     // create a role for ecs tasks
-    const taskRole = new IamRole(this, "ecs-task-exec", {
-      name: 'ecsTaskExecutionRole',
+    this.taskRole = new IamRole(this, resources.ECS_TASK_ROLE_NAME, {
+      name: resources.ECS_TASK_ROLE_NAME,
       tags: tag,
-      assumeRolePolicy: JSON.stringify(ecsRolePolicy)
+      assumeRolePolicy: JSON.stringify(ecsRolePolicy),
     });
 
-    new IamRolePolicyAttachment(this, 'ecs-task-exec-log', {
-      policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
-      role: taskRole.name
+    new IamRolePolicyAttachment(this, 
+      resources.ECS_TASK_ROLE_NAME + '_ecs-task-execution', 
+      {
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
+        role: this.taskRole.name
     });
 
-    new IamRolePolicyAttachment(this, 'ecs-task-exec-ecr', {
-      policyArn: 'arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess',
-      role: taskRole.name
-    });
-
-    // create an ECS cluster
-    new EcsCluster(this, 'bigcat-jupyter-cluster', {
-      name: 'bigcat-jupyter-cluster'
+    new IamRolePolicy(this, 
+      resources.ECS_TASK_ROLE_NAME + '_ecs-actions', 
+      {
+        policy: JSON.stringify(taskRolePolicy),
+        role: this.taskRole.name,
+        name: 'allow-full-ecs-actions'
     });
 
     // create a role to sync with schedule bucket

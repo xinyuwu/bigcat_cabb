@@ -33,7 +33,7 @@ c.DockerSpawner.network_name = network_name
 # Most jupyter/docker-stacks *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
 # We follow the same convention.
-notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/home/jovyan/work"
+notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/home/jovyan"
 c.DockerSpawner.notebook_dir = notebook_dir
 workarea_dir = os.environ.get("NOTEBOOK_WORKAREA_DIR") or "/Users/wu049/bigcat_cabb/notebooks"
 
@@ -63,23 +63,23 @@ c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
 # c.JupyterHub.authenticator_class = "nativeauthenticator.NativeAuthenticator"
 # Allow anyone to sign-up without approval
 # c.NativeAuthenticator.open_signup = True
-# c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
-# c.DummyAuthenticator.password = "password"
+c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
+c.DummyAuthenticator.password = "password"
 
-c.JupyterHub.authenticator_class = "oauthenticator.generic.GenericOAuthenticator"
-c.GenericOAuthenticator.client_id = "7d7m6trdqg7g7vicmu1h95vdrd"
-c.GenericOAuthenticator.client_secret = "1da53fsoeiv5gk4p4njfij9i06cka2nk86997i4vkqiifbqb2qss"
-c.GenericOAuthenticator.oauth_callback_url = "https://localhost/hub/oauth_callback"
+# c.JupyterHub.authenticator_class = "oauthenticator.generic.GenericOAuthenticator"
+# c.GenericOAuthenticator.client_id = "7d7m6trdqg7g7vicmu1h95vdrd"
+# c.GenericOAuthenticator.client_secret = "1da53fsoeiv5gk4p4njfij9i06cka2nk86997i4vkqiifbqb2qss"
+# c.GenericOAuthenticator.oauth_callback_url = "https://localhost/hub/oauth_callback"
 
-c.GenericOAuthenticator.authorize_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/authorize"
-c.GenericOAuthenticator.token_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/token"
-c.GenericOAuthenticator.userdata_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/userInfo"
+# c.GenericOAuthenticator.authorize_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+# c.GenericOAuthenticator.token_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/token"
+# c.GenericOAuthenticator.userdata_url = "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/userInfo"
 # c.GenericOAuthenticator.logout_redirect_url = "https://localhost"
 
-c.GenericOAuthenticator.logout_redirect_url = "https://bigcat.auth.us-east-1.amazoncognito.com/logout?client_id=7d7m6trdqg7g7vicmu1h95vdrd&response_type=code&scope=email+openid+phone&redirect_uri=https://localhost/"
-# these are always the same
-c.GenericOAuthenticator.login_service = "AWSCognito"
-c.GenericOAuthenticator.username_key = "username"
+# c.GenericOAuthenticator.logout_redirect_url = "https://bigcat.auth.us-east-1.amazoncognito.com/logout?client_id=7d7m6trdqg7g7vicmu1h95vdrd&response_type=code&scope=email+openid+phone&redirect_uri=https://localhost/"
+# # these are always the same
+# c.GenericOAuthenticator.login_service = "AWSCognito"
+# c.GenericOAuthenticator.username_key = "username"
 # c.GenericOAuthenticator.userdata_method = "POST"
 
 # Allowed admins

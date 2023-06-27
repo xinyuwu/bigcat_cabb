@@ -8,6 +8,15 @@ import sys
 
 c = get_config()  # noqa: F821
 
+task_role_arn = os.environ.get("TASK_ROLE_ARN", "")
+subnets = os.environ.get("SUBNETS", "")
+security_groups = os.environ.get("SECURITY_GROUPS", "")
+cull_freq = os.environ.get("CULL_FREQUENCY", 600)
+cull_timeout = os.environ.get('CULL_TIMEOUT', 600)
+jupyter_lab_image = os.environ.get('JUPYTER_LAB_REPOSITORY', '')
+fileSystem_id = os.environ.get('EFS_FILE_SYSTEM_ID', '')
+execution_role_arn = os.environ.get('EXECUTION_ROLE_ARN', '')
+cluster_name = os.environ.get("CLUSTER_NAME", "")
 
 c.JupyterHub.load_roles = [
     {
@@ -24,20 +33,19 @@ c.JupyterHub.load_roles = [
     }
 ]
 
+
 c.JupyterHub.services = [
     {
         "name": "jupyterhub-idle-culler-service",
         "command": [
             sys.executable,
             "-m", "jupyterhub_idle_culler",
-            "--cull-every=60",
-            "--timeout=480",
+            f"--cull-every={cull_freq}",
+            f"--timeout={cull_timeout}",
         ],
         # "admin": True,
     }
 ]
-
-
 
 from distutils.dir_util import copy_tree
 from fargatespawner import FargateSpawner
@@ -54,7 +62,9 @@ from tornado.httpclient import (
 )
 
 # need to fill in {0}
-# task_definition.format(user_name, user_dir)
+# task_definition.format(
+#       user_name, jupyter_lab_image, fileSystem_id, 
+#       user_dir, execution_role_arn)
 task_definition = '''
     {{
       "requiresCompatibilities": [
@@ -64,7 +74,7 @@ task_definition = '''
       "containerDefinitions": [
         {{
           "name": "bigcat-jupyter-lab",
-          "image": "647731306132.dkr.ecr.ap-southeast-2.amazonaws.com/bigcat-jupyter-repository",
+          "image": "{}",
           "essential": true,
           "portMappings": [
             {{
@@ -99,7 +109,7 @@ task_definition = '''
         {{
           "name": "efs",
           "efsVolumeConfiguration": {{
-            "fileSystemId": "fs-0a0d27f3160a3df8c",
+            "fileSystemId": "{}",
             "rootDirectory": "{}"
           }}
         }}
@@ -107,7 +117,7 @@ task_definition = '''
       "networkMode": "awsvpc",
       "memory": "3 GB",
       "cpu": "1 vCPU",
-      "executionRoleArn": "arn:aws:iam::647731306132:role/ecsTaskExecutionRole"
+      "executionRoleArn": "{}"
     }}
 '''
 
@@ -248,11 +258,11 @@ class XinyuFargateSpawner(FargateSpawner):
 
   async def start(self):
     user_name = self.user.name
-    user_dir = '/efs/jupyterhub-user-' + user_name
+    user_dir = '/efs/notebooks/jupyterhub-user-' + user_name
     # create user directory and copy some demo over if it doesn't exist
     if not os.path.isdir(user_dir):
        os.makedirs(user_dir)
-       copy_tree('/notebooks/default', user_dir)
+       copy_tree('/efs/notebooks/default', user_dir)
 
     # create the task definition if no active version exists
     response = await _describe_task_definition(
@@ -261,7 +271,9 @@ class XinyuFargateSpawner(FargateSpawner):
        'bigcat-jupyter-lab-'+ self.user.name)
     
     if not response or response.get('taskDefinition', {}).get('status', '') != 'ACTIVE':
-      definition = task_definition.format(user_name, user_dir)
+      definition = task_definition.format(
+          user_name, jupyter_lab_image, fileSystem_id, 
+          user_dir, execution_role_arn)
       response = await _register_task_definition(self.log, 
                                 self._aws_endpoint(), 
                                 json.loads(definition))
@@ -300,11 +312,12 @@ c.XinyuFargateSpawner.notebook_scheme = 'http'
 c.XinyuFargateSpawner.start_timeout = 300
 c.XinyuFargateSpawner.http_timeout = 300
 
+
 c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
-    'cluster': 'bigcat-jupyter-cluster',
+    'cluster': cluster_name,
     'taskDefinition': 'bigcat-jupyter-lab-'+ spawner.user.name,
     'overrides': {
-        'taskRoleArn': 'arn:aws:iam::647731306132:role/ecsTaskExecutionRole',
+        'taskRoleArn': task_role_arn,
         'containerOverrides': [{
             'name': 'bigcat-jupyter-lab',
             'command': ['start-singleuser.sh', '--notebook-dir=/home/jovyan',
@@ -323,9 +336,8 @@ c.XinyuFargateSpawner.get_run_task_args = lambda spawner: {
     'networkConfiguration': {
         'awsvpcConfiguration': {
             'assignPublicIp': 'ENABLED',
-            'securityGroups': ['sg-0506d1377ade5499c', 
-                               'sg-06beb423e0e5b1006'],
-            'subnets':  ['subnet-0bdf6a86c3b865030']
+            'securityGroups': security_groups.split(','),
+            'subnets':  subnets.split(',')
         },
     },
 }
