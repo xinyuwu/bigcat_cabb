@@ -66,6 +66,7 @@ export class JupyterServiceStack extends TerraformStack {
       launchType: 'FARGATE',
       taskDefinition: jupyterHubTaskDefinition.arn,
       desiredCount: 1,
+      enableExecuteCommand: true,
       networkConfiguration: {
         assignPublicIp: true,
         subnets: [instance.subnetId],

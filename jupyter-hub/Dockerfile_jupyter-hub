@@ -15,6 +15,9 @@ COPY ./localhost.crt /tmp/localhost.crt
 COPY ./jupyterhub_config_aws.py /srv/jupyterhub/jupyterhub_config.py
 # COPY ./jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 
+RUN groupadd -g 1000 ec2-user
+RUN useradd ec2-user -u 1000 -g 1000 -m -s /bin/bash 
+
 CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
 
 # docker build -f Dockerfile_jupyter-hub -t jupyter-hub-xinyu .

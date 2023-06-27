@@ -261,8 +261,18 @@ class XinyuFargateSpawner(FargateSpawner):
     user_dir = '/efs/notebooks/jupyterhub-user-' + user_name
     # create user directory and copy some demo over if it doesn't exist
     if not os.path.isdir(user_dir):
-       os.makedirs(user_dir)
-       copy_tree('/efs/notebooks/default', user_dir)
+      os.makedirs(user_dir)
+      # recursively change owner to 1000
+      copy_tree('/efs/notebooks/default', user_dir)
+      os.chown(user_dir, 1000, 1000)
+      for root, dirs, files in os.walk(user_dir):
+        # set perms on sub-directories  
+        for val in dirs:
+          os.chown(os.path.join(root, val), 1000, 1000)
+
+        # set perms on files
+        for val in files:
+          os.chown(os.path.join(root, val), 1000, 1000)
 
     # create the task definition if no active version exists
     response = await _describe_task_definition(
@@ -274,6 +284,7 @@ class XinyuFargateSpawner(FargateSpawner):
       definition = task_definition.format(
           user_name, jupyter_lab_image, fileSystem_id, 
           user_dir, execution_role_arn)
+      self.log.error(f'user_dir = {user_dir}')
       response = await _register_task_definition(self.log, 
                                 self._aws_endpoint(), 
                                 json.loads(definition))

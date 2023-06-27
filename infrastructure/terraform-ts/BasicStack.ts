@@ -54,25 +54,25 @@ export class BasicStack extends TerraformStack {
             protocol: "tcp",
             fromPort: 80,
             toPort: 80,
-            cidrBlocks: ["140.79.64.115/32", "130.155.199.8/32"]
+            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
             // cidrBlocks: ["0.0.0.0/0"]
           },{
             protocol: "tcp",
             fromPort: 8000,
             toPort: 8000,
-            cidrBlocks: ["140.79.64.115/32", "130.155.199.8/32"]
+            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
             // cidrBlocks: ["0.0.0.0/0"]
           }, {
             protocol: "tcp",
             fromPort: 22,
             toPort: 22,
-            cidrBlocks: ["140.79.64.115/32", "130.155.199.8/32"]
+            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
             // cidrBlocks: ["0.0.0.0/0"]
           }, {
             protocol: "tcp",
             fromPort: 443,
             toPort: 443,
-            cidrBlocks: ["140.79.64.115/32", "130.155.199.8/32"]
+            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
             // cidrBlocks: ["0.0.0.0/0"]
           }
         ],
