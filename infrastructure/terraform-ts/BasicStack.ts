@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
-import { TerraformStack } from "cdktf";
+import { TerraformStack, TerraformOutput } from "cdktf";
 import * as aws from "@cdktf/provider-aws";
+import { TerraformIterator } from 'cdktf';
 
 import { SecurityGroup } from "@cdktf/provider-aws/lib/security-group";
 import { DefaultVpc } from "@cdktf/provider-aws/lib/default-vpc";
@@ -11,6 +12,7 @@ import { EfsAccessPoint } from "@cdktf/provider-aws/lib/efs-access-point";
 import { SecurityGroupRule } from "@cdktf/provider-aws/lib/security-group-rule";
 import { Instance } from "@cdktf/provider-aws/lib/instance";
 import { EfsMountTarget } from "@cdktf/provider-aws/lib/efs-mount-target";
+import { DataAwsSubnets } from "@cdktf/provider-aws/lib/data-aws-subnets";
 
 import {ResourceNames} from './ResourceNames'
 
@@ -196,10 +198,24 @@ export class BasicStack extends TerraformStack {
         userData: script.join('\n')
     });
 
-    new EfsMountTarget(this, resources.EFS_MOUNT_NAME, {
+    const subnets = new DataAwsSubnets(this, 
+      'subnets-data_' + resources.config['environment'], 
+      {
+        filter: [{
+          name: "vpc-id",
+          values: [this.defaultVpc.id]
+        }]
+    });
+
+    const simpleIterator = TerraformIterator.fromList(subnets.ids);
+
+    const efsTargests = new EfsMountTarget(this, resources.EFS_MOUNT_NAME, {
+      forEach: simpleIterator,
       fileSystemId: this.efs.id,
       securityGroups: [this.efsSG.id],
-      subnetId: this.instance.subnetId,
+      subnetId: simpleIterator.value
     });
+
+    new TerraformOutput(this, 'efsTargests', { value: efsTargests });
   }
 }

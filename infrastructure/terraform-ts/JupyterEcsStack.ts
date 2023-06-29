@@ -84,6 +84,15 @@ export class JupyterEcsStack extends TerraformStack {
         "name": "jupyter-hub-xinyu_" + resources.config['environment'],
         "image": jupyterhub.repositoryUrl,
         "essential": true,
+        "healthCheck": {
+          "command": [
+            "CMD-SHELL",
+            "echo hello"
+          ],
+          "interval": 5,
+          "timeout": 2,
+          "retries": 3
+        },
         "environment": [
           {
             "name": "CULL_TIMEOUT",

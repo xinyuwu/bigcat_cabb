@@ -21,6 +21,8 @@ export class ResourceNames {
 
   private _JUPYTER_HUB_FAMILY_NAME = "jupyter-hub-xinyu";
 
+  private _TEST_DOMAIN_NAME = 'bigcat-test.org';
+  private _PRODUCTION_DOMAIN_NAME = '';
 
   constructor(config: any) {
     this._config = config;
@@ -94,4 +96,31 @@ export class ResourceNames {
     return this._JUPYTER_TASK_SG_NAME + '-' + this.config['environment'];
   }
 
+  get DOMAIN_NAME() {
+    if (this.config['environment'] !== 'prod') {
+      return this._TEST_DOMAIN_NAME;
+    }
+    return this._PRODUCTION_DOMAIN_NAME;
+  }
+
+  get SIMULATOR_SUB_DOMAIN_NAME() {
+    if (this.config['environment'] !== 'prod') {
+      return 'simulator-' + this.config['environment'] + '.' + this.DOMAIN_NAME;
+    }
+    return '';
+  }
+
+  get SCHEDULER_SUB_DOMAIN_NAME() {
+    if (this.config['environment'] !== 'prod') {
+      return 'scheduler-' + this.config['environment'] + '.' + this.DOMAIN_NAME;
+    }
+    return '';
+  }
+
+  get API_SUB_DOMAIN_NAME() {
+    if (this.config['environment'] !== 'prod') {
+      return 'api-' + this.config['environment'] + '.' + this.DOMAIN_NAME;
+    }
+    return '';
+  }
 }

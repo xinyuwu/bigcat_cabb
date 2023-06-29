@@ -53,8 +53,25 @@ export class RoleStack extends TerraformStack {
       "Environment": resources.config['environment']
     };
 
+    const lambda_ec2_policy = {
+      "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+              "ec2:CreateNetworkInterface",
+              "ec2:DescribeNetworkInterfaces",
+              "ec2:DeleteNetworkInterface",
+              "ec2:CreateTags"
+            ],
+            "Resource": "*"
+          }
+        ]
+    }
+
     // create a role for lambda functions 
-    const role = new IamRole(this, resources.LAMBDA_ROLE_NAME, {
+    const lambda_role = new IamRole(this, resources.LAMBDA_ROLE_NAME, {
       name: resources.LAMBDA_ROLE_NAME,
       tags: tag,
       assumeRolePolicy: JSON.stringify(lambdaRolePolicy)
@@ -64,22 +81,30 @@ export class RoleStack extends TerraformStack {
       resources.LAMBDA_ROLE_NAME + '_execution', 
       {
         policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-        role: role.name
+        role: lambda_role.name
     });
 
     new IamRolePolicyAttachment(this, 
       resources.LAMBDA_ROLE_NAME + '_s3-access', 
       {
         policyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess',
-        role: role.name
+        role: lambda_role.name
     });
 
     new IamRolePolicyAttachment(this, 
       resources.LAMBDA_ROLE_NAME + '_ec2-access', 
       {
         policyArn: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess',
-        role: role.name
+        role: lambda_role.name
     });
+
+    new IamRolePolicy(this,
+      resources.LAMBDA_ROLE_NAME + '_ec2-actions',
+      {
+        policy: JSON.stringify(lambda_ec2_policy),
+        role: lambda_role.name,
+        name: 'allow-ec2-actions_' + resources.config['environment']
+      });
 
     // create a role for ecs task execution
     this.executionRole = new IamRole(this, 
@@ -147,7 +172,7 @@ export class RoleStack extends TerraformStack {
       {
         policy: JSON.stringify(taskRolePolicy),
         role: this.taskRole.name,
-        name: 'allow-full-ecs-actions'
+        name: 'allow-full-ecs-actions_' + resources.config['environment']
     });
 
     // create a role to sync with schedule bucket
