@@ -43,8 +43,39 @@ export class BasicStack extends TerraformStack {
       "Environment": resources.config['environment']
     };
 
+    // allow http (port 80) and https (port 443) from anyway
+    new SecurityGroup(this,
+      resources.INTERNET_SG_NAME,
+      {
+        name: resources.INTERNET_SG_NAME,
+        tags: tag,
+        ingress: [
+          {
+            protocol: "tcp",
+            fromPort: 80,
+            toPort: 80,
+            cidrBlocks: ["0.0.0.0/0"]
+          },
+          {
+            protocol: "tcp",
+            fromPort: 443,
+            toPort: 443,
+            cidrBlocks: ["0.0.0.0/0"]
+          }
+        ],
+        egress: [
+          {
+            fromPort: 0,
+            toPort: 0,
+            protocol: "-1",
+            cidrBlocks: ["0.0.0.0/0"],
+            ipv6CidrBlocks: ["::/0"]
+          }
+        ]
+      });
+
     // 👇 create Security Group for the Instance
-    // allow http, http and ssh traffic from my ip (from home and work)
+    // allow all traffic from my ip (from home and work, with or without vpn)
     // can go outwards to anywhere
     this.instanceSG = new SecurityGroup(this, 
       resources.INSTANCE_SG_NAME, 
@@ -54,27 +85,9 @@ export class BasicStack extends TerraformStack {
         ingress: [
           {
             protocol: "tcp",
-            fromPort: 80,
-            toPort: 80,
-            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
-            // cidrBlocks: ["0.0.0.0/0"]
-          },{
-            protocol: "tcp",
-            fromPort: 8000,
-            toPort: 8000,
-            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
-            // cidrBlocks: ["0.0.0.0/0"]
-          }, {
-            protocol: "tcp",
-            fromPort: 22,
-            toPort: 22,
-            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
-            // cidrBlocks: ["0.0.0.0/0"]
-          }, {
-            protocol: "tcp",
-            fromPort: 443,
-            toPort: 443,
-            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12"]
+            fromPort: 0,
+            toPort: 0,
+            cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12", "1.156.16.179/32"]
             // cidrBlocks: ["0.0.0.0/0"]
           }
         ],
@@ -209,13 +222,13 @@ export class BasicStack extends TerraformStack {
 
     const simpleIterator = TerraformIterator.fromList(subnets.ids);
 
-    const efsTargests = new EfsMountTarget(this, resources.EFS_MOUNT_NAME, {
+    new EfsMountTarget(this, resources.EFS_MOUNT_NAME, {
       forEach: simpleIterator,
       fileSystemId: this.efs.id,
       securityGroups: [this.efsSG.id],
       subnetId: simpleIterator.value
     });
 
-    new TerraformOutput(this, 'efsTargests', { value: efsTargests });
+    new TerraformOutput(this, 'efsTargests', { value: subnets.ids });
   }
 }

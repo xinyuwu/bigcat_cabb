@@ -16,7 +16,7 @@ import { ResourceNames } from './ResourceNames'
 // ecs certificates must be created in region:
 // Asia Pacific (Sydney) ap-southeast-2
 // 
-export class CertificateStack extends TerraformStack {
+export class TestStack extends TerraformStack {
 
   constructor(scope: Construct, id: string, resources: ResourceNames) {
 

@@ -5,11 +5,17 @@ export class ResourceNames {
   private _JUPYTER_HUB_REPOSITORY_NAME = 'bigcat-jupyter-hub-repository';
   private _JUPYTER_REPOSITORY_NAME = 'bigcat-jupyter-repository';
   private _JUPYTER_CLUSTER_NAME = 'bigcat-jupyter-cluster';
+  private _JUPYTER_SERVICE_NAME = 'bigcat-jh-service';
+  private _JUPYTER_HUB_FAMILY_NAME = "jupyter-hub-xinyu";
+  private _JUPYTER_HUB_CONTAINER_PORT = 8000;
+  
   private _SCHEDULER_FRONTEND_BUCKET_NAME = "bigcatcabb-frontend";
   private _SCHEDULES_BUCKET_NAME = "bigcat-schedules";
   private _ECS_TASK_ROLE_NAME = 'ecsTaskRole';
   private _ECS_TASK_EXCUTION_ROLE_NAME = 'ecsTaskExecutionRole';
   private _LAMBDA_ROLE_NAME = 'bigcat-lambda-role';
+
+  private _INTERNET_SG_NAME = 'internet-sg';
   private _INSTANCE_SG_NAME = 'ec2-host-sg';
   private _EFS_SG_NAME = "full-access-to-efs-sg";
   private _JUPYTER_TASK_SG_NAME = "jupyter-task-sg";
@@ -18,8 +24,6 @@ export class ResourceNames {
   private _EFS_MOUNT_NAME = "bigcat-efs-mount";
 
   private _INSTANCE_NAME = "bigcat-instance";
-
-  private _JUPYTER_HUB_FAMILY_NAME = "jupyter-hub-xinyu";
 
   private _TEST_DOMAIN_NAME = 'bigcat-test.org';
   private _PRODUCTION_DOMAIN_NAME = '';
@@ -84,6 +88,10 @@ export class ResourceNames {
     return this._LAMBDA_ROLE_NAME + '-' + this.config['environment'];
   }
 
+  get INTERNET_SG_NAME() {
+    return this._INTERNET_SG_NAME + '-' + this.config['environment'];
+  }
+  
   get INSTANCE_SG_NAME() {
     return this._INSTANCE_SG_NAME + '-' + this.config['environment'];
   }
@@ -123,4 +131,13 @@ export class ResourceNames {
     }
     return '';
   }
+
+  get JUPYTER_HUB_CONTAINER_PORT() {
+    return this._JUPYTER_HUB_CONTAINER_PORT;
+  }
+
+  get JUPYTER_SERVICE_NAME() {
+    return this._JUPYTER_SERVICE_NAME + '-' + this.config['environment'];
+  }
+
 }

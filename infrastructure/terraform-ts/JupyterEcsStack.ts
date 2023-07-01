@@ -81,7 +81,7 @@ export class JupyterEcsStack extends TerraformStack {
     // create task definition for jupyter hub
     const jupyterHubContainerDefinition = [
       {
-        "name": "jupyter-hub-xinyu_" + resources.config['environment'],
+        "name": resources.JUPYTER_HUB_FAMILY_NAME,
         "image": jupyterhub.repositoryUrl,
         "essential": true,
         "healthCheck": {
@@ -133,8 +133,8 @@ export class JupyterEcsStack extends TerraformStack {
         ],
         "portMappings": [
           {
-            "containerPort": 8000,
-            "hostPort": 8000,
+            "containerPort": resources.JUPYTER_HUB_CONTAINER_PORT,
+            "hostPort": resources.JUPYTER_HUB_CONTAINER_PORT,
             "protocol": "tcp"
             }
         ],
@@ -162,7 +162,7 @@ export class JupyterEcsStack extends TerraformStack {
 
     // create service for jupyter hub
     new EcsTaskDefinition( this, 
-      'jupyter-hub-xinyu_' + resources.config['environment'],
+      resources.JUPYTER_HUB_FAMILY_NAME,
       {
         tags: tag,
         requiresCompatibilities: ["FARGATE"],
