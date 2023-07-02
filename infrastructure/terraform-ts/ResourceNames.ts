@@ -28,6 +28,7 @@ export class ResourceNames {
 
   private _INSTANCE_NAME = "bigcat-instance";
 
+  private _API_LAMBDA_APP_NAME = "cabb-aws-server";
   private _TEST_DOMAIN_NAME = 'bigcat-test.org';
   private _PRODUCTION_DOMAIN_NAME = '';
 
@@ -147,4 +148,7 @@ export class ResourceNames {
     return this._JUPYTER_SERVICE_NAME + '-' + this.config['environment'];
   }
 
+  get API_LAMBDA_APP_NAME() {
+    return this._API_LAMBDA_APP_NAME;
+  }
 }

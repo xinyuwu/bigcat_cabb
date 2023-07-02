@@ -1,15 +1,19 @@
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
-
-import { DataAwsS3Bucket } from "@cdktf/provider-aws/lib/data-aws-s3-bucket";
-import { CloudfrontDistribution } from "@cdktf/provider-aws/lib/cloudfront-distribution";
-import { DataAwsAcmCertificate } from "@cdktf/provider-aws/lib/data-aws-acm-certificate";
-
 import * as aws from "@cdktf/provider-aws";
 
-import { ResourceNames } from './ResourceNames'
+import { CloudfrontDistribution } from "@cdktf/provider-aws/lib/cloudfront-distribution";
 import { Route53Record } from "@cdktf/provider-aws/lib/route53-record";
+import { ApiGatewayDomainName } from "@cdktf/provider-aws/lib/api-gateway-domain-name";
+import { ApiGatewayBasePathMapping } from "@cdktf/provider-aws/lib/api-gateway-base-path-mapping";
+
+import { DataAwsAcmCertificate } from "@cdktf/provider-aws/lib/data-aws-acm-certificate";
+import { DataAwsS3Bucket } from "@cdktf/provider-aws/lib/data-aws-s3-bucket";
 import { DataAwsRoute53Zone } from "@cdktf/provider-aws/lib/data-aws-route53-zone";
+import { DataAwsApiGatewayRestApi } from "@cdktf/provider-aws/lib/data-aws-api-gateway-rest-api";
+
+
+import { ResourceNames } from './ResourceNames'
 
 export class SchedulerStack extends TerraformStack {
 
@@ -37,7 +41,7 @@ export class SchedulerStack extends TerraformStack {
         bucket: resources.SCHEDULER_FRONTEND_BUCKET_NAME
     });
 
-    const sslCertificate = new DataAwsAcmCertificate(this,
+    const schedulerCertificate = new DataAwsAcmCertificate(this,
       resources.SCHEDULER_SUB_DOMAIN_NAME + '_ssl-data',
       {
         domain: resources.SCHEDULER_SUB_DOMAIN_NAME,
@@ -45,9 +49,16 @@ export class SchedulerStack extends TerraformStack {
         provider: usEastProvider
       });
 
+    const apiCertificate = new DataAwsAcmCertificate(this,
+      resources.API_SUB_DOMAIN_NAME + '_ssl-data',
+      {
+        domain: resources.API_SUB_DOMAIN_NAME,
+        statuses: ["ISSUED"],
+        provider: usEastProvider
+      });
+
     const originId = resources.SCHEDULER_FRONTEND_BUCKET_NAME;
 
-    
     const cloudFrontDistribution = new CloudfrontDistribution(
       this,
       resources.SCHEDULER_FRONTEND_BUCKET_NAME + "_cloudfront",
@@ -95,7 +106,7 @@ export class SchedulerStack extends TerraformStack {
         priceClass: "PriceClass_All",
         enabled: true,
         viewerCertificate: {
-          acmCertificateArn: sslCertificate.arn,
+          acmCertificateArn: schedulerCertificate.arn,
           cloudfrontDefaultCertificate: false,
           minimumProtocolVersion: "TLSv1.2_2021",
           sslSupportMethod: "sni-only"
@@ -131,5 +142,42 @@ export class SchedulerStack extends TerraformStack {
         allowOverwrite: true,
       }
     );
+
+
+    // add lambda to domain name and route 53
+    const apiGatewayDomain = new ApiGatewayDomainName(this, 
+      resources.API_SUB_DOMAIN_NAME + '_gateway-domain', 
+      {
+        tags: tag,
+        domainName: resources.API_SUB_DOMAIN_NAME,
+        certificateArn: apiCertificate.arn
+    });
+
+    const apiLambdaApp = new DataAwsApiGatewayRestApi(this,
+      resources.API_LAMBDA_APP_NAME + '_data',
+      { name: resources.API_LAMBDA_APP_NAME });
+    
+    new ApiGatewayBasePathMapping(this, resources.API_SUB_DOMAIN_NAME + '_gateway-mapping', {
+      domainName: apiGatewayDomain.domainName,
+      stageName: resources.config['environment'],
+      apiId: apiLambdaApp.id,
+    });
+
+    new Route53Record(
+      this,
+      resources.API_SUB_DOMAIN_NAME + '-route53-record',
+      {
+        name: resources.API_SUB_DOMAIN_NAME,
+        type: 'A',
+        alias: {
+          name: apiGatewayDomain.cloudfrontDomainName,
+          evaluateTargetHealth: true,
+          zoneId: apiGatewayDomain.cloudfrontZoneId
+        },
+        zoneId: zone.zoneId,
+        allowOverwrite: true,
+      }
+    );
+
   }
 }
