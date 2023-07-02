@@ -11,6 +11,9 @@ export class ResourceNames {
   
   private _SCHEDULER_FRONTEND_BUCKET_NAME = "bigcatcabb-frontend";
   private _SCHEDULES_BUCKET_NAME = "bigcat-schedules";
+
+  private _SCHEDULER_CLOUD_FRONT_NAME = "bigcatcabb-cloud-front";
+ 
   private _ECS_TASK_ROLE_NAME = 'ecsTaskRole';
   private _ECS_TASK_EXCUTION_ROLE_NAME = 'ecsTaskExecutionRole';
   private _LAMBDA_ROLE_NAME = 'bigcat-lambda-role';
@@ -71,7 +74,11 @@ export class ResourceNames {
   get SCHEDULER_FRONTEND_BUCKET_NAME() {
     return this._SCHEDULER_FRONTEND_BUCKET_NAME + '-' + this.config['environment'];
   }
-
+  
+  get SCHEDULER_CLOUD_FRONT_NAME() {
+    return this._SCHEDULER_CLOUD_FRONT_NAME + '-' + this.config['environment'];
+  }
+  
   get SCHEDULES_BUCKET_NAME() {
     return this._SCHEDULES_BUCKET_NAME + '-' + this.config['environment'];
   }

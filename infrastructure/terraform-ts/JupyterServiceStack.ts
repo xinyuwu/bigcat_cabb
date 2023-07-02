@@ -15,6 +15,8 @@ import { DataAwsAcmCertificate } from "@cdktf/provider-aws/lib/data-aws-acm-cert
 import { ResourceNames } from './ResourceNames'
 import { DataAwsEcsTaskDefinition } from "@cdktf/provider-aws/lib/data-aws-ecs-task-definition";
 import { DataAwsSubnets } from "@cdktf/provider-aws/lib/data-aws-subnets";
+import { DataAwsRoute53Zone } from "@cdktf/provider-aws/lib/data-aws-route53-zone";
+import { Route53Record } from "@cdktf/provider-aws/lib/route53-record";
 
 export class JupyterServiceStack extends TerraformStack {
 
@@ -108,7 +110,7 @@ export class JupyterServiceStack extends TerraformStack {
         }
     });
 
-    // create load balancer listener
+    // create load balancer listener for https (on port 443)
     new LbListener(this, resources.JUPYTER_SERVICE_NAME + '_lb-listener', {
       tags: tag,
       loadBalancerArn: lb.arn,
@@ -122,6 +124,28 @@ export class JupyterServiceStack extends TerraformStack {
         targetGroupArn: lbTargetGroup.arn
       }]
     });
+
+    //
+    // -- seems to redirect without this listener
+    //
+    // create load balancer listener to redirect 
+    // http (on port 80) to https (on port 443)
+    //
+    // new LbListener(this, resources.JUPYTER_SERVICE_NAME + '_lb-ssl-listener', {
+    //   tags: tag,
+    //   loadBalancerArn: lb.arn,
+    //   port: 80,
+    //   protocol: "HTTP",
+
+    //   defaultAction: [{
+    //     type: "redirect",
+    //     redirect: {
+    //       port: "443",
+    //       protocol: "HTTPS",
+    //       statusCode: "HTTP_301"
+    //     }
+    //   }]
+    // });
 
     new EcsService(this, resources.JUPYTER_SERVICE_NAME, {
       name: resources.JUPYTER_SERVICE_NAME,
@@ -142,5 +166,27 @@ export class JupyterServiceStack extends TerraformStack {
         containerPort: resources.JUPYTER_HUB_CONTAINER_PORT
       }]
     });
+
+    const zone = new DataAwsRoute53Zone(this, resources.DOMAIN_NAME + '-zone', {
+      name: resources.DOMAIN_NAME,
+      privateZone: false
+    });
+
+    // add entry to route 53
+    new Route53Record(
+      this,
+      resources.SIMULATOR_SUB_DOMAIN_NAME + '-route53-record',
+      {
+        name: resources.SIMULATOR_SUB_DOMAIN_NAME,
+        type: 'A',
+        alias: {
+          name: lb.dnsName,
+          evaluateTargetHealth: true,
+          zoneId: lb.zoneId
+        },
+        zoneId: zone.zoneId,
+        allowOverwrite: true,
+      }
+    );
   }
 }

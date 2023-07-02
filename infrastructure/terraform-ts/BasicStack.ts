@@ -84,7 +84,7 @@ export class BasicStack extends TerraformStack {
         tags: tag,
         ingress: [
           {
-            protocol: "tcp",
+            protocol: "-1",
             fromPort: 0,
             toPort: 0,
             cidrBlocks: ["140.79.64.115/32", "130.144.0.0/12", "1.156.16.179/32"]
@@ -143,7 +143,7 @@ export class BasicStack extends TerraformStack {
         }]
     });
 
-    new SecurityGroupRule(this, resources.EFS_SG_NAME + '_rule',
+    new SecurityGroupRule(this, resources.EFS_SG_NAME + '_rule_I',
       {
         type: 'ingress',
         protocol: 'tcp',
@@ -153,7 +153,18 @@ export class BasicStack extends TerraformStack {
         sourceSecurityGroupId: this.efsSG.id
       }
     );
-    
+
+    new SecurityGroupRule(this, resources.EFS_SG_NAME + '_rule_II',
+      {
+        type: 'ingress',
+        protocol: 'tcp',
+        fromPort: 2049,
+        toPort: 2049,
+        securityGroupId: this.efsSG.id,
+        sourceSecurityGroupId: this.instanceSG.id
+      }
+    );
+
     this.efs = new EfsFileSystem(this, resources.EFS_NAME, {
       tags: tag,
     });

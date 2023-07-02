@@ -6,6 +6,8 @@ import { BasicStack } from "./BasicStack";
 import { RoleStack } from "./Roles";
 import { JupyterEcsStack } from "./JupyterEcsStack";
 import { JupyterServiceStack } from "./JupyterServiceStack";
+import { PrintLamdaStack } from "./PrintLamdaStack";
+import { SchedulerStack } from "./SchedulerStack";
 
 
 const config = {
@@ -25,6 +27,9 @@ new RoleStack(app, `terraform-ts-roles-${config['environment']}`, resourceNames)
 new JupyterEcsStack(app, `terraform-ts-ecs-${config['environment']}`, resourceNames);
 new JupyterServiceStack(app, `terraform-ts-service-${config['environment']}`, resourceNames);
 
+new PrintLamdaStack(app, `terraform-ts-print-lambda-${config['environment']}`, resourceNames);
+
+new SchedulerStack(app, `terraform-ts-scheduler-${config['environment']}`, resourceNames);
 // new TestStack(app, `terraform-ts-test-${config['environment']}`, resourceNames);
 
 app.synth();
