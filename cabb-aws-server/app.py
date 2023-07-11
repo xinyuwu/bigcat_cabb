@@ -33,6 +33,7 @@ def check_group(group):
     def check(*args):
       request = app.current_request
       groups = request.context['authorizer']['claims'].get('cognito:groups', '')
+      print('groups:', groups, 'group:', group)
       groups = groups.split(',')
       if group in groups:
         return func(*args)
@@ -161,8 +162,8 @@ def list_files():
 
   return json.dumps(files, indent=4)
 
-@check_group(group='bigcat')
 @app.route('/list', cors=cors_config, authorizer=authorizer)
+@check_group(group='bigcat')
 def list_directory():
   obj = get_dir_content(get_base_directory(USER_ID))
   return json.dumps(obj, indent=4)
