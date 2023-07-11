@@ -41,7 +41,7 @@ export default function CreateFileDialog(
   }
 
   const handleCreate = () => {
-    const directory = selectedItem['path'] ? selectedItem['path'] : [];
+    const directory = (selectedItem && selectedItem['path']) ? selectedItem['path'] : [];
     let filename = directory.length > 0 ? directory.join('/') + '/' : '';
 
     filename += selectedItem ? selectedItem['name'] : '';

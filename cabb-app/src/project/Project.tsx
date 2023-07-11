@@ -79,7 +79,7 @@ export default function Project() {
       }
     }
 
-    return false;
+    return true;
   }
 
   const itemSelectionAllowed = (item: any) => {

@@ -14,6 +14,7 @@ import ScheduleContextProvider from './schedule/ScheduleContext';
 import { Amplify, Auth } from 'aws-amplify'
 
 import './App.css';
+import { Alert, Snackbar } from '@mui/material';
 
 const SERVER_ROOT_URL = process.env.REACT_APP_SERVER_ROOT_URL;
 
@@ -58,7 +59,7 @@ Amplify.configure({
     // Note: if the secure flag is set to true, then the cookie transmission requires a secure protocol
     cookieStorage: {
       // REQUIRED - Cookie domain (only required if cookieStorage is provided)
-      domain: 'localhost',
+      domain: 'scheduler-dev.bigcat-test.org',
       // OPTIONAL - Cookie path
       path: '/',
       // OPTIONAL - Cookie expiration in days
@@ -88,8 +89,8 @@ Amplify.configure({
         'email',
         'openid',
       ],
-      redirectSignIn: 'http://localhost/bigcat-app',
-      redirectSignOut: 'http://localhost/bigcat-app',
+      redirectSignIn: 'https://scheduler-dev.bigcat-test.org/bigcat-app/',
+      redirectSignOut: 'https://scheduler-dev.bigcat-test.org/bigcat-app/',
       responseType: 'code', // or 'token', note that REFRESH token will only be generated when the responseType is code
     },
   },
@@ -97,6 +98,7 @@ Amplify.configure({
 
 function App() {
   const location = useLocation();
+  const [authorised, setAuthorised] = React.useState(false);
 
   // Hub.listen('auth', ({ payload: { event, data } }) => {
   //   switch (event) {
@@ -115,6 +117,13 @@ function App() {
   Auth.currentSession()
     .then((data: any) => {
       console.log('user logged in: ' + data['idToken']['payload']['email']);
+      // make sure user is in the right group
+      const groups = data['idToken']['payload']['cognito:groups'];
+      console.log('user logged in: ' + groups);
+      if (groups && groups.includes('bigcat')) {
+        console.log('user logged in and in right ');
+        setAuthorised(true);
+      }
     })
     .catch((err) => {
         console.log('not logged in: ' + err);
@@ -124,32 +133,41 @@ function App() {
   return (
     <div className="App">
       <CabbAppBar />
-      <ProjectContextProvider>
-        <Stack direction={'row'}>
-          {location.pathname !== '/' && <NavigationMenu />}
-          <Box sx={{flexGrow: 4}}>
-            <Routes>
-              <Route path='/' element={
-                <Project />
-              } />
-              <Route path='/target-catalogue' element={
-                <TargetCatalogueView />
-              } />
-              <Route path='/schedule-editor' element={
-                <ScheduleContextProvider>
-                  <Schedule />
-                </ScheduleContextProvider>
-              } />
-              <Route path='/band-config' element={
-                <BandConfigurationView />
-              } />
-              <Route path='/correlator-setting' element={
-                <CorrelatorConfigurationView />
-              } />
-            </Routes>
-          </Box>
-        </Stack>
-      </ProjectContextProvider>
+      {authorised ? (
+        <ProjectContextProvider>
+          <Stack direction={'row'}>
+            {location.pathname !== '/' && <NavigationMenu />}
+            <Box sx={{flexGrow: 4}}>
+              <Routes>
+                <Route path='/' element={
+                  <Project />
+                } />
+                <Route path='/target-catalogue' element={
+                  <TargetCatalogueView />
+                } />
+                <Route path='/schedule-editor' element={
+                  <ScheduleContextProvider>
+                    <Schedule />
+                  </ScheduleContextProvider>
+                } />
+                <Route path='/band-config' element={
+                  <BandConfigurationView />
+                } />
+                <Route path='/correlator-setting' element={
+                  <CorrelatorConfigurationView />
+                } />
+              </Routes>
+            </Box>
+          </Stack>
+        </ProjectContextProvider>
+        )
+        :
+        (
+          <Alert severity="error">
+            You are not authorised to access this application. Please contact 'email' for help.
+          </Alert>
+        )
+      }
     </div>
   );
 }
