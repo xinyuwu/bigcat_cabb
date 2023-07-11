@@ -1,10 +1,14 @@
-from chalice import Chalice, CORSConfig, Response
+from chalice import Chalice, CORSConfig, Response, AuthResponse
 import json
 import os
 import copy
 import pathlib
 import boto3
 from botocore.exceptions import ClientError
+from distutils.dir_util import copy_tree
+from chalice import CognitoUserPoolAuthorizer, ForbiddenError
+import functools
+
 
 
 cors_config = CORSConfig(
@@ -16,9 +20,40 @@ cors_config = CORSConfig(
     allow_credentials=True
 )
 
+authorizer = CognitoUserPoolAuthorizer(
+    'test-user-pool', 
+    header='Authorization', 
+    provider_arns=['arn:aws:cognito-idp:us-east-1:647731306132:userpool/us-east-1_oSMtMT3nD'])
+
+
+# would be good if we could combine this check with authoriser
+def check_group(group):   
+  def actual_check_group(func):
+    @functools.wraps(func)
+    def check(*args):
+      request = app.current_request
+      groups = request.context['authorizer']['claims'].get('cognito:groups', '')
+      groups = groups.split(',')
+      if group in groups:
+        return func(*args)
+      else:
+        raise ForbiddenError("user must be in the {} group".format(group))
+      
+    return check
+  
+  return actual_check_group
+
+
 # TODO: should set value in env
 # BASE_DIRECTORY = '/Users/wu049/bigcat_cabb/notebooks/jupyterhub-user-{user}'
-BASE_DIRECTORY = '/mnt/efs/workarea/jupyterhub-user-{user}'
+def get_base_directory(user_id):
+  BASE_DIRECTORY = f'/mnt/efs/notebooks/jupyterhub-user-{user_id}'
+  # create user directory and copy some demo over if it doesn't exist
+  if not os.path.isdir(BASE_DIRECTORY):
+      os.makedirs(BASE_DIRECTORY)
+      copy_tree('/mnt/efs/notebookds/default', BASE_DIRECTORY)
+  
+  return BASE_DIRECTORY
 
 # TODO: integrate with single sign on, user_id should come in
 USER_ID = 'wu049'
@@ -66,8 +101,7 @@ s3_client = boto3.client('s3')
 def hello_world():
    return 'Hello world!'
 
-
-@app.route('/get_name')
+@app.route('/get_name', authorizer=authorizer)
 def get_name():
    return json.dumps({
         "message": 'Xinyu',
@@ -127,9 +161,10 @@ def list_files():
 
   return json.dumps(files, indent=4)
 
-@app.route('/list', cors=cors_config)
+@check_group(group='bigcat')
+@app.route('/list', cors=cors_config, authorizer=authorizer)
 def list_directory():
-  obj = get_dir_content(BASE_DIRECTORY.format(user=USER_ID))
+  obj = get_dir_content(get_base_directory(USER_ID))
   return json.dumps(obj, indent=4)
 
 def retrieve_file(fullname):
@@ -287,7 +322,7 @@ def deploy_schedule():
     s3_name = s3_name.replace('/', '-')
     s3_client.put_object(
       Body = json.dumps(result), 
-      Bucket = 'atcaschedules', 
+      Bucket = 'bigcat-schedules', 
       Key = s3_name)
     result = {
         'status': 'success',
@@ -347,7 +382,7 @@ def get_filename(filename, userid):
   if not filename:
     return ''
   
-  root = BASE_DIRECTORY.format(user=userid)
+  root = get_base_directory(userid)
   relative_path = os.path.join(root, filename)
   absolute_path = os.path.abspath(relative_path)
 

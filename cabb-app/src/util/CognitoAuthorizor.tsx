@@ -6,6 +6,7 @@ export default function call_API(
   handleReponse: (response: any) => void,
   handleError: (error: any) => void,
   ) {
+    console.log('call api');
   Auth.currentAuthenticatedUser()
     .then((user) => {
       const token = user['signInUserSession']['idToken']['jwtToken'];
@@ -17,7 +18,7 @@ export default function call_API(
         }
       };
 
-      API.get(path, apiName, request)
+      API.get(apiName, path, request)
       .then((response: any) => {
         handleReponse(response);
       })
