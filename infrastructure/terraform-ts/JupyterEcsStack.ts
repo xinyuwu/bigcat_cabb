@@ -129,6 +129,34 @@ export class JupyterEcsStack extends TerraformStack {
           {
             "name": "EFS_FILE_SYSTEM_ID",
             "value": efs.fileSystemId
+          },
+          {
+            "name": "OAUTH_CLIENT_ID",
+            "value": "7d7m6trdqg7g7vicmu1h95vdrd"
+          },
+          {
+            "name": "OAUTH_CLIENT_SECRET",
+            "value": "1da53fsoeiv5gk4p4njfij9i06cka2nk86997i4vkqiifbqb2qss"
+          },
+          {
+            "name": "OAUTH_CALLBACK_URL",
+            "value": "https://simulator-dev.bigcat-test.org/hub/oauth_callback"
+          },
+          {
+            "name": "OAUTH_AUTHORIZE_URL",
+            "value": "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+          },
+          {
+            "name": "OAUTH_TOKEN_URL",
+            "value": "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/token"
+          },
+          {
+            "name": "OAUTH_USERDATA_URL",
+            "value": "https://bigcat.auth.us-east-1.amazoncognito.com/oauth2/userInfo"
+          },
+          {
+            "name": "OAUTH_LOGOUT_REDIRECT_URL",
+            "value": "https://simulator-dev.bigcat-test.org/"
           }
         ],
         "portMappings": [
